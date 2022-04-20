@@ -48,6 +48,7 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+        continue-on-error: true
         
    deployecr:
     name: deploying aws ecr with terraform
