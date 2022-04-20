@@ -1,3 +1,4 @@
+
 #==== prov ======================
 
 terraform {
@@ -77,7 +78,7 @@ terraform {
 #====================== ECR 
 
 resource "aws_ecr_repository" "app_repo_back" {
-  name = "app-repo-back"
+  name = "epamapp-back"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -108,7 +109,7 @@ EOF
 }
 
 resource "aws_ecr_repository" "app_repo_front" {
-  name = "app-repo-front"
+  name = "epamapp-front"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -327,26 +328,26 @@ resource "aws_security_group" "cluster_sg" {
 }
 
 
-#====DB=============
-resource "aws_db_instance" "db" {
-  identifier = "db"
-engine = "postgres"
-engine_version = "13.4"
-allocated_storage = 5
-instance_class = "db.t3.micro"
-vpc_security_group_ids = [aws_security_group.db_sg.id ]
-availability_zone = "eu-central-1a" 
-db_subnet_group_name = aws_db_subnet_group.sub_db_sg.id
-name = var.db_name
-username = var.dbuser
-  # password = data.aws_ssm_parameter.rds-pass.value
-  password = var.dbpasswd
-  publicly_accessible = true
-  skip_final_snapshot = true
-  tags = {
-    Name = "postgresql"
-  }
-}
+# #====DB=============
+# resource "aws_db_instance" "db" {
+#   identifier = "db"
+# engine = "postgres"
+# engine_version = "13.4"
+# allocated_storage = 5
+# instance_class = "db.t3.micro"
+# vpc_security_group_ids = [aws_security_group.db_sg.id ]
+# availability_zone = "eu-central-1a" 
+# db_subnet_group_name = aws_db_subnet_group.sub_db_sg.id
+# name = var.db_name
+# username = var.dbuser
+#   # password = data.aws_ssm_parameter.rds-pass.value
+#   password = var.dbpasswd
+#   publicly_accessible = true
+#   skip_final_snapshot = true
+#   tags = {
+#     Name = "postgresql"
+#   }
+# }
 
 #========RDS==============================
 
@@ -468,11 +469,11 @@ resource "aws_security_group" "db_sg" {
 
 
 # #================SHOWMEWHATYOUHAVE===================
-output "rds_hostname_address" {
-  description = "RDS instance hostname"
-  value       = aws_db_instance.db.address
-  sensitive   = false
-}
+# output "rds_hostname_address" {
+#   description = "RDS instance hostname"
+#   value       = aws_db_instance.db.address
+#   sensitive   = false
+# }
 
 # output "cluster_endpoint" {
   # description = "cluster endpoint"
