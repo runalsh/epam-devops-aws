@@ -1,5 +1,4 @@
 
-
 on:
   push:
     branches: [ main ]
@@ -14,87 +13,87 @@ on:
 
 jobs:
      
-   deploys3:
-    name: deploying S3 buckets
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: s3
-    env:
-      ACTION: Init S3 buckets for ECR and ECS with terraform
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+  #  deploys3:
+  #   name: deploying S3 buckets
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: s3
+  #   env:
+  #     ACTION: Init S3 buckets for ECR and ECS with terraform
+  #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+  #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+  #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
  
-    steps:
-      - name: Checkout 
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout 
+  #       uses: actions/checkout@v2
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v1
 
-      - name: Terraform format
-        run: terraform fmt -check
-        continue-on-error: true
+  #     - name: Terraform format
+  #       run: terraform fmt -check
+  #       continue-on-error: true
 
-      - name: Terraform init
-        run: terraform init
+  #     - name: Terraform init
+  #       run: terraform init
       
-      - name: Terraform validate
-        run: terraform validate
+  #     - name: Terraform validate
+  #       run: terraform validate
 
-      - name: Terraform plan
-        id: plan
-        run: terraform plan
+  #     - name: Terraform plan
+  #       id: plan
+  #       run: terraform plan
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        continue-on-error: true
+  #     - name: Terraform Apply
+  #       run: terraform apply -auto-approve
+  #       continue-on-error: true
                 
-   deployaws:
-    name: deploying aws with terraform 
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: init
-    needs: deploys3
-    env:
-      ACTION: Deploy AWS infrastructure with Terraform
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+  #  deployaws:
+  #   name: deploying aws with terraform 
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: init
+  #   needs: deploys3
+  #   env:
+  #     ACTION: Deploy AWS infrastructure with Terraform
+  #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+  #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+  #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
  
-    steps:
-      - name: Checkout 
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout 
+  #       uses: actions/checkout@v2
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v1
 
-      - name: Terraform format
-        run: terraform fmt -check
-        continue-on-error: true
+  #     - name: Terraform format
+  #       run: terraform fmt -check
+  #       continue-on-error: true
 
-      - name: Terraform init
-        run: terraform init
+  #     - name: Terraform init
+  #       run: terraform init
            
-      - name: Terraform validate
-        run: terraform validate
+  #     - name: Terraform validate
+  #       run: terraform validate
 
-      - name: Terraform plan
-        id: plan
-        run: terraform plan
-        continue-on-error: true
+  #     - name: Terraform plan
+  #       id: plan
+  #       run: terraform plan
+  #       continue-on-error: true
 
-      # - name: Terraform Plan Status
-        # if: steps.plan.outcome == 'failure'
-        # run: exit 1
+  #     # - name: Terraform Plan Status
+  #       # if: steps.plan.outcome == 'failure'
+  #       # run: exit 1
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
+  #     - name: Terraform Apply
+  #       run: terraform apply -auto-approve
         
    buiildpushback:
-    needs: deployaws
+    # needs: deployaws
     env:
       ACTION: Push backend image to AWS ECR
     name: Push backend image to AWS ECR
@@ -124,9 +123,10 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
    buiildpushfront:
-    needs: deployaws
+    # needs: deployaws
     env:
       ACTION: Push frontend image to AWS ECR
     name: Push frontend image to AWS ECR
@@ -151,12 +151,12 @@ jobs:
       env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: epamapp-front
-          IMAGE_TAG: back-${{ github.sha }}
+          IMAGE_TAG: front-${{ github.sha }}
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
             
 
 
