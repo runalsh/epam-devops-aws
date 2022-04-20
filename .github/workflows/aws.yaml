@@ -1,4 +1,5 @@
 
+
 on:
   push:
     branches: [ main ]
@@ -49,43 +50,6 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
         continue-on-error: true
-        
-   deployecr:
-    name: deploying aws infra with terraform
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: init
-    needs: deploys3
-    env:
-      ACTION: Deploy AWS infrastructure with Terraform
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
- 
-    steps:
-      - name: Checkout 
-        uses: actions/checkout@v2
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-
-      - name: Terraform format
-        run: terraform fmt -check
-        continue-on-error: true
-
-      - name: Terraform init
-        run: terraform init
-      
-      - name: Terraform validate
-        run: terraform validate
-
-      - name: Terraform plan
-        id: plan
-        run: terraform plan
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
                 
    deployaws:
     name: deploying aws with terraform 
@@ -93,7 +57,7 @@ jobs:
     defaults:
       run:
         working-directory: init
-    needs: deployecr
+    needs: deploys3
     env:
       ACTION: Deploy AWS infrastructure with Terraform
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
@@ -162,7 +126,7 @@ jobs:
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
    buiildpushfront:
-    needs: buiildpushback
+    needs: deployaws
     env:
       ACTION: Push frontend image to AWS ECR
     name: Push frontend image to AWS ECR
@@ -194,5 +158,7 @@ jobs:
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
             
+
+
 
 
