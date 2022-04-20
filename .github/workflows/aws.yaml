@@ -1,3 +1,4 @@
+
 on:
   push:
     branches: [ main ]
@@ -50,14 +51,14 @@ jobs:
         continue-on-error: true
         
    deployecr:
-    name: deploying aws ecr with terraform
+    name: deploying aws infra with terraform
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: init
     needs: deploys3
     env:
-      ACTION: Deploy ECR storage with Terraform
+      ACTION: Deploy AWS infrastructure with Terraform
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
@@ -131,8 +132,8 @@ jobs:
    buiildpushback:
     needs: deployaws
     env:
-      ACTION: Push image to AWS ECS and update tasks in cluster
-    name: start deploying to awc ecr
+      ACTION: Push backend image to AWS ECR
+    name: Push backend image to AWS ECR
     defaults:
       run:
         working-directory: back
@@ -163,8 +164,8 @@ jobs:
    buiildpushfront:
     needs: buiildpushback
     env:
-      ACTION: Push image to AWS ECS and update tasks in cluster
-    name: start deploying to awc ecr
+      ACTION: Push frontend image to AWS ECR
+    name: Push frontend image to AWS ECR
     defaults:
       run:
         working-directory: front
