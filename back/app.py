@@ -159,13 +159,11 @@ def stresssec(seconds):
 
 @app.route("/stress")
 def stress():
-    # out=Popen(["/usr/bin/stress", "--cpu", "1", "--timeout", "%s"%STRESSTIME])
     cpustress(STRESSTIME)
     return "Host %host: %s %ss stress.\n" % (host, STRESSTIME)
 
 @app.route("/cpu")
 def cpu():
-    # out=cpu_percent(interval=0.2)
     out=getloadavg()[0]
     return "Host: %s, CPU load: %s\n" %(host, out)
 
