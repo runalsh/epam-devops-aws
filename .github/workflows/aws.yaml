@@ -1,12 +1,12 @@
 
 on:
   push:
-    branches: [ $GITHUB_REF_NAME ]
+    branches: [ prod ]
     paths-ignore:
       - '*.md'
      # - '.github/workflows/**'
   pull_request:
-    branches: [ $GITHUB_REF_NAME ]
+    branches: [ prod ]
     paths-ignore:
       - '*.md'
      # - '.github/workflows/**'
