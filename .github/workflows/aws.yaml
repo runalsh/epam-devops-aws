@@ -1,4 +1,3 @@
-
 on:
   push:
     branches: [ main ]
@@ -12,7 +11,21 @@ on:
      # - '.github/workflows/**'
 
 jobs:
-     
+  checkenv:
+    steps:
+        - uses: FranzDiebold/github-env-vars-action@v1.2.0
+        - name: Print environment variables
+          run: |
+            echo "GITHUB_REPOSITORY_SLUG=$GITHUB_REPOSITORY_SLUG"
+            echo "GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER"
+            echo "GITHUB_REPOSITORY_OWNER_SLUG=$GITHUB_REPOSITORY_OWNER_SLUG"
+            echo "GITHUB_REPOSITORY_NAME=$GITHUB_REPOSITORY_NAME"
+            echo "GITHUB_REPOSITORY_NAME_SLUG=$GITHUB_REPOSITORY_NAME_SLUG"
+            echo "GITHUB_REF_SLUG=$GITHUB_REF_SLUG"
+            echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
+            echo "GITHUB_REF_NAME_SLUG=$GITHUB_REF_NAME_SLUG"
+            echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
+
   #  deploys3:
   #   name: deploying S3 buckets
   #   runs-on: ubuntu-latest
@@ -157,7 +170,37 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         
-            
+  #  deploytokube:
+  #   needs: [buiildpushfront,buiildpushback]
+  #   env:
+  #     ACTION: Deploy images from ECR to kube with helm
+  #   name: Deploy images from ECR to kube with helm
+  #   defaults:
+  #     run:
+  #       working-directory: deployk8s
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1
+
+  #   - name: Update creditials for kuber
+  #     run: |
+  #       aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
+    
+  #   - name: Install/upgrade helm chart
+  #     uses: hiberbee/github-action-helm@latest
+  #     with:
+  #       helm-command: upgrade --install epampycluster-app helm/chart/ --set container.image=${{ steps.login-ecr.outputs.registry }} -f /helm/var-$GITHUB_REF_NAME.yaml
+
 
 
 
