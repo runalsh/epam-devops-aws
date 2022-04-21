@@ -135,7 +135,7 @@ metrics = PrometheusMetrics(app)
 
 @app.route('/ping')
 def ping():
-    return "PONG! im SNAKE and im alive! now at %host "+current_time
+    return "PONG! %s im SNAKE and im alive!" %(host)
     
 @app.route('/getdata')
 def getdata():
