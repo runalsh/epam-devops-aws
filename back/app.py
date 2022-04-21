@@ -31,14 +31,15 @@ current_time = currtime.strftime("%H:%M:%S")
 
 
 # вариант под docker compose
-# db= {"user": "pypostgres","password": "pypostgres","host": "postgres","port": "5432","database": "wandb"}
-db = {
-      "user": os.getenv('DB_USER'),
-      "password": os.getenv('DB_PASSWORD'),
-      "host": os.getenv('DB_HOST'),
-      "port": os.getenv('DB_PORT'),
-      "database": os.getenv('DB_NAME')
-}
+#db= {"user": "pypostgres","password": "pypostgres","host": "postgres","port": "5432","database": "wandb"}
+db= {"user": "pypostgres","password": "pypostgres","host": "db.c6qymts32yb3.eu-central-1.rds.amazonaws.com","port": "5432","database": "wandb"}
+#db = {
+  #    "user": os.getenv('DB_USER'),
+ #    "password": os.getenv('DB_PASSWORD'),
+ #     "host": os.getenv('DB_HOST'),
+ #     "port": os.getenv('DB_PORT'),
+ #     "database": os.getenv('DB_NAME')
+#}
 
 
 def storedata():
