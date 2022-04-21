@@ -11,7 +11,9 @@ on:
      # - '.github/workflows/**'
 
 jobs:
-  checkenv:
+   checkenv:
+    name: deploying S3 buckets
+    runs-on: ubuntu-latest
     steps:
         - uses: FranzDiebold/github-env-vars-action@v1.2.0
         - name: Print environment variables
