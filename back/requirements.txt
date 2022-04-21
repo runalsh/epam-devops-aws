@@ -4,3 +4,4 @@ requests
 python-dotenv
 psutil
 prometheus-flask-exporter
+pystress
