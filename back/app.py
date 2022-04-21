@@ -30,16 +30,15 @@ current_time = currtime.strftime("%H:%M:%S")
 
 
 # вариант под docker compose
-db= {"user": "pypostgres","password": "pypostgres","host": "postgres","port": "5432","database": "wandb"}
-# db = {
+# db= {"user": "pypostgres","password": "pypostgres","host": "postgres","port": "5432","database": "wandb"}
+db = {
       # "user": os.getenv('DB_USER'),
       # "password": os.getenv('DB_PASSWORD'),
       # "host": os.getenv('DB_HOST'),
-      # "port": "5432",
+      # "port": os.getenv('DB_PORT'),
       # "database": os.getenv('DB_NAME')
 # }
-# некрасиво с хостом, надо так: terraform output > var > host 
-# TODO
+
 
 def storedata():
     connection = psycopg2.connect(**db)
@@ -160,8 +159,8 @@ def stresssec(seconds):
 @app.route("/stress")
 def stress():
     # out=Popen(["/usr/bin/stress", "--cpu", "1", "--timeout", "%s"%STRESSTIME])
-	cpustress(STRESSTIME)
-	return "Host %host: %s %ss stress.\n" % (host, STRESSTIME)
+    cpustress(STRESSTIME)
+    return "Host %host: %s %ss stress.\n" % (host, STRESSTIME)
 
 @app.route("/cpu")
 def cpu():
@@ -210,3 +209,5 @@ def showmeweather():
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
     app.run(debug=True)
+
+
