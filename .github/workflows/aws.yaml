@@ -233,7 +233,6 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
 
-
    buiildpushfront:
     # needs: deployaws
     env:
@@ -299,7 +298,39 @@ jobs:
                       ## --set container.image=${{ steps.login-ecr.outputs.registry }} \
                       # -f /helm/var-${GITHUB_REF_NAME}.yaml \
 
-
+ #  monutoring:
+  #   needs: deploytokube
+  #   env:
+  #     ACTION: Deploy monitoring and metric in kube 
+  #   name: Deploy monitoring and metric in kube 
+  #   defaults:
+  #     run:
+  #       working-directory: deployk8s
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Update creditials for kuber
+  #     run: |
+  #       aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
+ #    - name: Get admin permissions
+    #   run: |
+    #     kubectl apply -f admin.yaml
+    # - name: Setting up dashboard 
+    #   run: |
+    #     kubectl apply -f dashboard.yaml
+    ### kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
+    ### kubectl proxy
+    ### dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
+    # - name: Setting up metrics
+    #   run: |
+    #     kubectl apply -f metrics-server.yaml   
 
 
 
