@@ -25,8 +25,7 @@ jobs:
             echo "GITHUB_REPOSITORY_NAME_SLUG=$GITHUB_REPOSITORY_NAME_SLUG"
             echo "GITHUB_REF_SLUG=$GITHUB_REF_SLUG"
             echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
-            echo "GITHUB_REF_NAME_SLUG=$GITHUB_REF_NAME_SLUG"
-            echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
+            echo "GITHUB_REF_NAME_SLUG=$GITHUB_REF_NAME_SLUG
 
   #  deploys3:
   #   name: deploying S3 buckets
