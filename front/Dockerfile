@@ -1,5 +1,4 @@
 FROM nginx:latest
-COPY ./nginx.conf.template /nginx.conf.template
+COPY ./nginx.conf.template /nginx.conf
 COPY ./index.html /usr/share/nginx/html/index.html
-CMD ["/bin/sh" , "-c" , "envsubst < /nginx.conf.template > /etc/nginx/nginx.conf & nginx -g 'daemon off;'"]
 EXPOSE 80
