@@ -1,0 +1,9 @@
+namespace: prod
+container:
+    name: epamapp
+ecrname: 619357854683.dkr.ecr.eu-central-1.amazonaws.com
+dbhost: db.c6qymts32yb3.eu-central-1.rds.amazonaws.com
+dbport: 5432
+dbpassword: pypostgres
+dbuser: pypostgres
+dbname: wandb

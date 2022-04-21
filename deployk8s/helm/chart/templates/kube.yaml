@@ -1,0 +1,226 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
+---  
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.container.name }}-back-{{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.container.name }}-back-{{ .Values.namespace }}
+spec:
+  # replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.container.name }}-back-{{ .Values.namespace }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+    type: RollingUpdate    
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.container.name }}-back-{{ .Values.namespace }}
+    spec:
+      # terminationGracePeriodSeconds: 60
+      containers:
+      - name: {{ .Values.container.name }}-back-{{ .Values.namespace }}
+        image: {{ .Values.ecrname }}/{{ .Values.container.name }}-back-{{ .Values.namespace }}
+        imagePullPolicy: Always
+        env:
+        - name: DB_HOST
+          value: {{ .Values.dbhost }}
+        - name: DB_NAME
+          value: {{ .Values.dbname }}
+        - name: DB_USER
+          value: {{ .Values.dbuser }}
+        - name: DB_PASSWORD
+          value: {{ .Values.dbpassword }}
+        - name: DB_PORT
+          value: "{{ .Values.dbport }}"
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        # resources:
+          # limits: 
+            # memory: 64Mi
+            # cpu: "250m"
+          # requests:
+            # memory: 32Mi
+            # cpu: "200m"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+    type: RollingUpdate   
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+    spec:
+      # terminationGracePeriodSeconds: 60
+      containers:
+      - name: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+        image: {{ .Values.ecrname }}/{{ .Values.container.name }}-front-{{ .Values.namespace }}
+        imagePullPolicy: Always
+        env:
+        - name: backapp
+          value: epamapp-back
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        # resources:
+          # limits: 
+            # memory: 64Mi
+            # cpu: "250m"
+          # requests:
+            # memory: 32Mi
+            # cpu: "200m"
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.container.name }}-back
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.container.name }}-back-{{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+      app: {{ .Values.container.name }}-back-{{ .Values.namespace }}
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+  # annotations:
+  #   service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  #   service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
+  #   service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0  
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+    
+# # ---
+# # apiVersion: networking.k8s.io/v1
+# # kind: Ingress
+# # metadata:
+# #   namespace: {{ .Values.namespace }}
+# #   name: {{ .Values.container.name }}-front
+# #   annotations:
+# #     kubernetes.io/ingress.class: "nginx"
+# # spec:
+# #   rules:
+# #     - host: ingress-front-{{ .Values.container.name }}-{{ .Values.namespace }}.local
+# #       http:
+# #        paths:
+# #        - pathType: Prefix
+# #          path: /
+# #          backend:
+# #            service:
+# #             name: {{ .Values.container.name }}-front
+# #             port:
+# #               number: 80
+              
+# # ---
+# # apiVersion: networking.k8s.io/v1
+# # kind: Ingress
+# # metadata:
+# #   namespace: {{ .Values.namespace }}
+# #   name: {{ .Values.container.name }}-back
+# #   annotations:
+# #     kubernetes.io/ingress.class: "nginx"
+# # spec:
+# #   rules:
+# #     # - host: ingress-back-{{ .Values.container.name }}-{{ .Values.namespace }}
+# #     - http:
+# #        paths:
+# #        - pathType: Prefix
+# #          path: /
+# #          backend:
+# #            service:
+# #             name: {{ .Values.container.name }}-back
+# #             port:
+# #               number: 8080
+
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.container.name }}-back-{{ .Values.namespace }}-scaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.container.name }}-back
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  - type: Pods
+    pods:
+      metric:
+        name: packets-per-second
+      target:
+        type: AverageValue
+        averageValue: 1k
+  - type: Object
+    object:
+      metric:
+        name: requests-per-second
+      describedObject:
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        name: main-route
+      target:
+        type: Value
+        value: 10k
+
