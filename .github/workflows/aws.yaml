@@ -1,5 +1,4 @@
 
-
 on:
   push:
     branches: [ prod ]
@@ -205,8 +204,8 @@ jobs:
   #   - name: Install/upgrade helm chart
   #     uses: hiberbee/github-action-helm@latest
   #     with:
-  #       helm-command: upgrade --install epampycluster-app helm/chart/ \
-                      # --set container.image=${{ steps.login-ecr.outputs.registry }} \
+  #       helm-command: upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ \
+                      ## --set container.image=${{ steps.login-ecr.outputs.registry }} \
                       # -f /helm/var-${GITHUB_REF_NAME}.yaml \
 
 
