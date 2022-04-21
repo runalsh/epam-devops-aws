@@ -4,7 +4,7 @@
 import psycopg2
 # import urllib.request as req
 import os
-# from os import environ,getenv
+from os import environ,getenv
 from os import getenv
 from dotenv import load_dotenv
 import sys
