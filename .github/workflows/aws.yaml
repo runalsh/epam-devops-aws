@@ -1,22 +1,25 @@
+
 on:
   push:
-    branches: [ prod ]
+    branches: [ main ]
     paths-ignore:
       - '*.md'
      # - '.github/workflows/**'
   pull_request:
-    branches: [ prod ]
+    branches: [ main ]
     paths-ignore:
       - '*.md'
      # - '.github/workflows/**'
 
 jobs:
    checkenv:
-    name: checking enviroments
+    name: deploying S3 buckets
     runs-on: ubuntu-latest
     steps:
-        - uses: FranzDiebold/github-env-vars-action@v1.2.0
+        - uses: FranzDiebold/github-env-vars-action@v1.2.0    
         - name: Print environment variables
+          env:
+            ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
           run: |
             echo "GITHUB_REPOSITORY_SLUG=$GITHUB_REPOSITORY_SLUG"
             echo "GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER"
@@ -25,8 +28,8 @@ jobs:
             echo "GITHUB_REPOSITORY_NAME_SLUG=$GITHUB_REPOSITORY_NAME_SLUG"
             echo "GITHUB_REF_SLUG=$GITHUB_REF_SLUG"
             echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
-            echo "GITHUB_REF_NAME_SLUG=$GITHUB_REF_NAME_SLUG
-
+            echo "GITHUB_REF_NAME_SLUG=$GITHUB_REF_NAME_SLUG"
+            echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
   #  deploys3:
   #   name: deploying S3 buckets
   #   runs-on: ubuntu-latest
