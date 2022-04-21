@@ -4,7 +4,7 @@
 import psycopg2
 # import urllib.request as req
 import os
-from os import environ,getenv
+# from os import environ,getenv
 from os import getenv
 from dotenv import load_dotenv
 import sys
@@ -35,7 +35,7 @@ current_time = currtime.strftime("%H:%M:%S")
 db = {
       "user": os.getenv('DB_USER'),
       "password": os.getenv('DB_PASSWORD'),
-      "host": "db.c6qymts32yb3.eu-central-1.rds.amazonaws.com",
+      "host": os.getenv('DB_HOST'),
       "port": os.getenv('DB_PORT'),
       "database": os.getenv('DB_NAME')
 }
