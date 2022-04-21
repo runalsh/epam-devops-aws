@@ -52,7 +52,7 @@ def storedata():
         '''
     cursor.execute(create_clean)
 
-    for day in range(1,2):
+    for day in range(1,31):
         response = requests.get("https://www.metaweather.com/api/location/2122265/"+str(currtime.year)+"/"+str(currtime.month)+"/"+str(day)+"/")
         for data in response.json():
             id = data['id']
