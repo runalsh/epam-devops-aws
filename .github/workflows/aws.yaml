@@ -1,4 +1,4 @@
-  
+ 
 
 
 
@@ -298,11 +298,11 @@ jobs:
                       ## --set container.image=${{ steps.login-ecr.outputs.registry }} \
                       # -f /helm/var-${GITHUB_REF_NAME}.yaml \
 
- #  monutoring:
+ #  dashboard:
   #   needs: deploytokube
   #   env:
-  #     ACTION: Deploy monitoring and metric in kube 
-  #   name: Deploy monitoring and metric in kube 
+  #     ACTION: Deploy dashboatd and metrics
+  #   name: Deploy dashboatd and metrics
   #   defaults:
   #     run:
   #       working-directory: deployk8s
@@ -332,7 +332,38 @@ jobs:
     #   run: |
     #     kubectl apply -f metrics-server.yaml   
 
+ #  monitoring:
+  #   needs: deploytokube
+  #   env:
+  #     ACTION: Deploy cloudwatsh monitoring and store logs
+  #   name: Deploy cloudwatsh monitoring and store logs
+  #   defaults:
+  #     run:
+  #       working-directory: deployk8s
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Update creditials for kuber
+  #     run: |
+  #       aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
+ #    - name: apply
+    #   run: |
+    #     kubectl apply -f cloudwatch
+    
 
+
+
+
+
+    
+     
 
 
 
