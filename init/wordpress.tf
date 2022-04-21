@@ -77,27 +77,27 @@ terraform {
 
 #====================== ECR 
 
-resource "aws_ecr_repository" "app_repo_back" {
-  name = "epamapp-back"
+resource "aws_ecr_repository" "app_repo_back_prod" {
+  name = "epamapp-back-prod"
 
   image_scanning_configuration {
     scan_on_push = true
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "repo_policy_back" {
-  repository = aws_ecr_repository.app_repo_back.name
+resource "aws_ecr_lifecycle_policy" "repo_policy_back_prod" {
+  repository = aws_ecr_repository.app_repo_back_prod.name
 
   policy = <<EOF
 {
   "rules": [
     {
       "rulePriority": 1,
-      "description": "more 10 to trash",
+      "description": "more 5 to trash",
       "selection": {
         "tagStatus": "any",
         "countType": "imageCountMoreThan",
-        "countNumber": 10
+        "countNumber": 5
       },
       "action": {
         "type": "expire"
@@ -108,27 +108,89 @@ resource "aws_ecr_lifecycle_policy" "repo_policy_back" {
 EOF
 }
 
-resource "aws_ecr_repository" "app_repo_front" {
-  name = "epamapp-front"
+resource "aws_ecr_repository" "app_repo_front_prod" {
+  name = "epamapp-front-prod"
 
   image_scanning_configuration {
     scan_on_push = true
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "repo_policy_front" {
-  repository = aws_ecr_repository.app_repo_front.name
+resource "aws_ecr_lifecycle_policy" "repo_policy_front_prod" {
+  repository = aws_ecr_repository.app_repo_front_prod.name
 
   policy = <<EOF
 {
   "rules": [
     {
       "rulePriority": 1,
-      "description": "more 10 to trash",
+      "description": "more 5 to trash",
       "selection": {
         "tagStatus": "any",
         "countType": "imageCountMoreThan",
-        "countNumber": 10
+        "countNumber": 5
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_ecr_repository" "app_repo_back_dev" {
+  name = "epamapp-back-dev"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "repo_policy_back_dev" {
+  repository = aws_ecr_repository.app_repo_back_dev.name
+
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "more 5 to trash",
+      "selection": {
+        "tagStatus": "any",
+        "countType": "imageCountMoreThan",
+        "countNumber": 5
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_ecr_repository" "app_repo_front_dev" {
+  name = "epamapp-front-dev"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "repo_policy_front_dev" {
+  repository = aws_ecr_repository.app_repo_front_dev.name
+
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "more 5 to trash",
+      "selection": {
+        "tagStatus": "any",
+        "countType": "imageCountMoreThan",
+        "countNumber": 5
       },
       "action": {
         "type": "expire"
@@ -153,35 +215,6 @@ resource "aws_key_pair" "generated_key" {
 
 #========== perm ============
 
-resource "aws_iam_instance_profile" "ecs_service_role" {
-  role = aws_iam_role.ecs-instance-role.name
-}
-
-resource "aws_iam_role" "ecs-instance-role" {
-  name = "ecs-instance-role"
-  path = "/"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": ["ec2.amazonaws.com"]
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "ecs-instance-role-attachment" {
-  role       = aws_iam_role.ecs-instance-role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
-}
-
 resource "aws_iam_role" "eks-cluster" {
   name               = "eks-cluster"
   assume_role_policy = <<POLICY
@@ -199,8 +232,6 @@ resource "aws_iam_role" "eks-cluster" {
 }
 POLICY
 }
-
-
 
 resource "aws_iam_role_policy_attachment" "eks-cluster-policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
@@ -316,6 +347,41 @@ resource "aws_db_subnet_group" "sub_db_sg" {
 resource "aws_security_group" "cluster_sg" {
   name   = "cluster-sg"
   vpc_id = aws_vpc.vpc_main.id
+
+  ingress {
+      from_port        = 0
+      to_port          = 0
+      protocol         = "-1"
+      #cidr_blocks      = [aws_vpc.vpc_main.cidr_block]
+      cidr_blocks = ["0.0.0.0/0"]
+      # self             = false
+    }
+  
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "cluster-sg"
+  }
+}
+
+resource "aws_security_group" "nodes-sg" {
+  name        = "nodes-sg"
+  vpc_id      = aws_vpc.vpc_main.id
+  
+  # ingress {
+  #     from_port        = 0
+  #     to_port          = 0
+  #     protocol         = "-1"
+  #     #cidr_blocks      = [aws_vpc.vpc_main.cidr_block]
+  #     cidr_blocks = ["0.0.0.0/0"]
+  #     # self             = false
+  #   }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -323,31 +389,29 @@ resource "aws_security_group" "cluster_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name = "cluster-sg"
+    Name = "node-cluster-sg"
+  }
+}  
+#====DB=============
+resource "aws_db_instance" "db" {
+  identifier = "db"
+  engine = "postgres"
+  engine_version = "13.4"
+  allocated_storage = 5
+  instance_class = "db.t3.micro"
+  vpc_security_group_ids = [aws_security_group.db_sg.id ]
+  availability_zone = "eu-central-1a" 
+  db_subnet_group_name = aws_db_subnet_group.sub_db_sg.id
+  db_name = var.db_name
+  username = var.dbuser
+  # password = data.aws_ssm_parameter.rds-pass.value
+  password = var.dbpasswd
+  publicly_accessible = true
+  skip_final_snapshot = true
+  tags = {
+    Name = "postgresql"
   }
 }
-
-
-# #====DB=============
-# resource "aws_db_instance" "db" {
-#   identifier = "db"
-# engine = "postgres"
-# engine_version = "13.4"
-# allocated_storage = 5
-# instance_class = "db.t3.micro"
-# vpc_security_group_ids = [aws_security_group.db_sg.id ]
-# availability_zone = "eu-central-1a" 
-# db_subnet_group_name = aws_db_subnet_group.sub_db_sg.id
-# name = var.db_name
-# username = var.dbuser
-#   # password = data.aws_ssm_parameter.rds-pass.value
-#   password = var.dbpasswd
-#   publicly_accessible = true
-#   skip_final_snapshot = true
-#   tags = {
-#     Name = "postgresql"
-#   }
-# }
 
 #========RDS==============================
 
@@ -407,50 +471,63 @@ resource "aws_security_group" "db_sg" {
   ]
 }
 
-#=============================EKS
+# ##=============================EKS
 
-# resource "aws_eks_cluster" "eks_cluster" {
-#   name     = var.name
-#   role_arn = aws_iam_role.eks-cluster.arn
+resource "aws_eks_cluster" "eks_cluster" {
+  name     = var.name
+  role_arn = aws_iam_role.eks-cluster.arn
+  # version    = "1.22"
 
+  vpc_config {
+    # endpoint_private_access = true
+    # endpoint_public_access  = true
+    security_group_ids = [aws_security_group.cluster_sg.id]
+    subnet_ids = aws_subnet.subnets[*].id
+  }
+  depends_on = [
+     aws_iam_role_policy_attachment.eks-cluster-policy,
+     aws_iam_role_policy_attachment.eks-vpc-policy
+  ]
+}
 
-#   vpc_config {
-#     endpoint_private_access = false
-#     endpoint_public_access  = true
-#     security_group_ids = [aws_security_group.cluster_sg.id]
-#     subnet_ids = aws_subnet.subnets[*].id
-#   }
-# }
+resource "aws_eks_node_group" "nodes" {
+  cluster_name    = aws_eks_cluster.eks_cluster.name
+  node_group_name = "nodes"
+  node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
+  subnet_ids      = aws_subnet.subnets[*].id
+  scaling_config {
+    desired_size = 1
+    max_size     = 2
+    min_size     = 1
+  }
 
-# resource "aws_eks_node_group" "nodes" {
-#   cluster_name    = aws_eks_cluster.eks_cluster.name
-#   node_group_name = "nodes"
-#   node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
-#   subnet_ids      = aws_subnet.subnets[*].id
-#   scaling_config {
-#     desired_size = 1
-#     max_size     = 1
-#     min_size     = 1
-#   }
+#    remote_access {
+#      ec2_ssh_key = var.key_name2
+#     source_security_group_ids = [aws_security_group.sg_main.id]
+#    }
 
-#   remote_access {
-#     ec2_ssh_key = var.key_name2,var.key_name
-#     source_security_group_ids = aws_security_group.sg_main.id
-#   }
+  disk_size            = 8
+  # capacity_type        = "ON_DEMAND"
+  capacity_type        = "SPOT"
+  force_update_version = false
+  instance_types       = ["t3.small"]
+  ###  you should chose instance with > 8 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
+  labels               = {
+    role = "nodes"
+  }
 
-#   disk_size            = 20
-#   force_update_version = false
-#   instance_types       = ["t2.micro"]
-#   labels               = {
-#     role = "nodes"
-#   }
+  depends_on = [
+    aws_iam_role_policy_attachment.eks-worker-node-policy,
+    aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
+    aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
+  ]
+}
 
-#   depends_on = [
-#     aws_iam_role_policy_attachment.eks-worker-node-policy,
-#     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
-#     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
-#   ]
-# }
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.eks_cluster.endpoint
+  token                  = data.aws_eks_cluster_auth.eks_cluster.token
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
+}
 
 
 # #=========  not scale ======================
@@ -476,12 +553,12 @@ resource "aws_security_group" "db_sg" {
 # }
 
 # output "cluster_endpoint" {
-  # description = "cluster endpoint"
+#   description = "cluster endpoint"
 #   value = aws_eks_cluster.eks_cluster.endpoint
 # }
 
 # output "kubeconfig_certificate_authority_data" {
-  # description = "kube certificate"
+#   description = "kube certificate"
 #   value = aws_eks_cluster.eks_cluster.certificate_authority[0].data
-  # sensitive   = false
+#   sensitive   = false
 # }
