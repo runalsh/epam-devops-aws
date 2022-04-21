@@ -136,7 +136,7 @@ jobs:
       id: build-image
       env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-back-${ github_ref_name }
+          ECR_REPOSITORY: epamapp-back-${GITHUB_REF_NAME}
           IMAGE_TAG: back-${{ github.sha }}
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
@@ -169,7 +169,7 @@ jobs:
       id: build-image
       env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-front-${ github_ref_name }
+          ECR_REPOSITORY: epamapp-front-${GITHUB_REF_NAME}
           IMAGE_TAG: front-${{ github.sha }}
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
@@ -207,7 +207,7 @@ jobs:
   #     with:
   #       helm-command: upgrade --install epampycluster-app helm/chart/ \
                       # --set container.image=${{ steps.login-ecr.outputs.registry }} \
-                      # -f /helm/var-${ github_ref_name }.yaml \
+                      # -f /helm/var-${GITHUB_REF_NAME}.yaml \
 
 
 
