@@ -28,8 +28,8 @@ jobs:
   #           echo "GITHUB_REPOSITORY_NAME=$GITHUB_REPOSITORY_NAME"
   #           echo "GITHUB_REPOSITORY_NAME_SLUG=$GITHUB_REPOSITORY_NAME_SLUG"
   #           echo "GITHUB_REF_SLUG=$GITHUB_REF_SLUG"
-  #           echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
-  #           echo "GITHUB_REF_NAME_SLUG=$GITHUB_REF_NAME_SLUG"
+  #           echo "GITHUB_REF_NAME=$github_ref_name"
+  #           echo "GITHUB_REF_NAME_SLUG=$github_ref_name_SLUG"
   #           echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
   #  deploys3:
   #   name: deploying S3 buckets
@@ -135,7 +135,7 @@ jobs:
       id: build-image
       env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-back-$GITHUB_REF_NAME
+          ECR_REPOSITORY: epamapp-back-$github_ref_name
           IMAGE_TAG: back-${{ github.sha }}
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
@@ -168,7 +168,7 @@ jobs:
       id: build-image
       env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-front-$GITHUB_REF_NAME
+          ECR_REPOSITORY: epamapp-front-$github_ref_name
           IMAGE_TAG: front-${{ github.sha }}
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
@@ -206,7 +206,7 @@ jobs:
   #     with:
   #       helm-command: upgrade --install epampycluster-app helm/chart/ \
                       # --set container.image=${{ steps.login-ecr.outputs.registry }} \
-                      # -f /helm/var-$GITHUB_REF_NAME.yaml \
+                      # -f /helm/var-$github_ref_name.yaml \
 
 
 
