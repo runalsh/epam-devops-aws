@@ -285,11 +285,10 @@ jobs:
     - name: Update creditials for kuber
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster"
-
     - name: Configure Kubeconfig
       id: kube_config_data
-      run: echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
-    
+      run: |
+        echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
     - name: Deploy to EKS
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
