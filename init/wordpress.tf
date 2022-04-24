@@ -54,6 +54,25 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
+variable "lifecycle_rules" {
+  default = [{
+    rule_priority   = 1
+    tag_status      = "tagged"
+    tag_prefix_list = ["back", "front"]
+    count_type      = "sinceImagePushed"
+    count_number    = 2
+    },
+    {
+      "rulePriority": 1,
+            "description": "Expire older than 2 days",
+            "selection": {
+            "tagStatus": "untagged",
+            "countType": "sinceImagePushed",
+            "countUnit": "days",
+            "countNumber": 2
+            }}]
+}
+
 #========== S3 ==============
 
 # resource "aws_s3_bucket" "terraform_state" {
@@ -86,25 +105,7 @@ resource "aws_ecr_repository" "app_repo_back_prod" {
 
 resource "aws_ecr_lifecycle_policy" "repo_policy_back_prod" {
   repository = aws_ecr_repository.app_repo_back_prod.name
-
-  policy = <<EOF
-{
-  "rules": [
-    {
-      "rulePriority": 1,
-      "description": "more 5 to trash",
-      "selection": {
-        "tagStatus": "any",
-        "countType": "imageCountMoreThan",
-        "countNumber": 5
-      },
-      "action": {
-        "type": "expire"
-      }
-    }
-  ]
-}
-EOF
+  policy =  jsonencode({ "rules" : var.lifecycle_rules })
 }
 
 resource "aws_ecr_repository" "app_repo_front_prod" {
@@ -117,25 +118,7 @@ resource "aws_ecr_repository" "app_repo_front_prod" {
 
 resource "aws_ecr_lifecycle_policy" "repo_policy_front_prod" {
   repository = aws_ecr_repository.app_repo_front_prod.name
-
-  policy = <<EOF
-{
-  "rules": [
-    {
-      "rulePriority": 1,
-      "description": "more 5 to trash",
-      "selection": {
-        "tagStatus": "any",
-        "countType": "imageCountMoreThan",
-        "countNumber": 5
-      },
-      "action": {
-        "type": "expire"
-      }
-    }
-  ]
-}
-EOF
+  policy =  jsonencode({ "rules" : var.lifecycle_rules })
 }
 
 resource "aws_ecr_repository" "app_repo_back_dev" {
@@ -148,25 +131,7 @@ resource "aws_ecr_repository" "app_repo_back_dev" {
 
 resource "aws_ecr_lifecycle_policy" "repo_policy_back_dev" {
   repository = aws_ecr_repository.app_repo_back_dev.name
-
-  policy = <<EOF
-{
-  "rules": [
-    {
-      "rulePriority": 1,
-      "description": "more 5 to trash",
-      "selection": {
-        "tagStatus": "any",
-        "countType": "imageCountMoreThan",
-        "countNumber": 5
-      },
-      "action": {
-        "type": "expire"
-      }
-    }
-  ]
-}
-EOF
+  policy =  jsonencode({ "rules" : var.lifecycle_rules })
 }
 
 resource "aws_ecr_repository" "app_repo_front_dev" {
@@ -179,25 +144,7 @@ resource "aws_ecr_repository" "app_repo_front_dev" {
 
 resource "aws_ecr_lifecycle_policy" "repo_policy_front_dev" {
   repository = aws_ecr_repository.app_repo_front_dev.name
-
-  policy = <<EOF
-{
-  "rules": [
-    {
-      "rulePriority": 1,
-      "description": "more 5 to trash",
-      "selection": {
-        "tagStatus": "any",
-        "countType": "imageCountMoreThan",
-        "countNumber": 5
-      },
-      "action": {
-        "type": "expire"
-      }
-    }
-  ]
-}
-EOF
+  policy =  jsonencode({ "rules" : var.lifecycle_rules })
 }
 
 #============ RES ==========
