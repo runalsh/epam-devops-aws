@@ -11,93 +11,92 @@ on:
      # - '.github/workflows/**'
 
 jobs:
-  #  pytest:
-  #   # needs: initkube
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: back
-  #   env:
-  #     ACTION: Test Pytest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Set up Python 3.9
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: 3.9
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install pytest
-  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-  #   - name: Test with pytest
-  #     run: |
-  #       pytest
+   pytest:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: back
+    env:
+      ACTION: Test Pytest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Test with pytest
+      run: |
+        pytest
  
-  # bandit:
-  #   runs-on: ubuntu-latest
-  #   needs: pytest
-  #   defaults:
-  #     run:
-  #       working-directory: back
-  #   env:
-  #     ACTION: Test Bandit test
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Set up Python 3.9
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: 3.9
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install bandit
-  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-  #   - name: analyze source code with bandit
-  #     run: |
-  #       bandit -c bandit.yml -s B104,B608,B201,B101 -r .
+  bandit:
+    runs-on: ubuntu-latest
+    needs: pytest
+    defaults:
+      run:
+        working-directory: back
+    env:
+      ACTION: Test Bandit test
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: analyze source code with bandit
+      run: |
+        bandit -c bandit.yml -s B104,B608,B201,B101 -r .
  
     
-  #  sonarcloud:
-  #   needs: pytest
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       fetch-depth: 0
-  #   - name: SonarCloud Scan
-  #     ## continue-on-error: true
-  #     uses: sonarsource/sonarcloud-github-action@master
-  #     with:
-  #       projectBaseDir: back
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+   sonarcloud:
+    needs: pytest
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: SonarCloud Scan
+      ## continue-on-error: true
+      uses: sonarsource/sonarcloud-github-action@master
+      with:
+        projectBaseDir: back
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 
 
-  #  pylint:
-  #   needs: pytest
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: back    
-  #   env:
-  #     ACTION: Test Linter check
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Set up Python 3.9
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: 3.9
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install pylint 
-  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-  #   - name: Lint with pylint
-  #     run: |
-  #       pylint --exit-zero $(ls -R | grep .py$ | xargs)
+   pylint:
+    needs: pytest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: back    
+    env:
+      ACTION: Test Linter check
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint 
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with pylint
+      run: |
+        pylint --exit-zero $(ls -R | grep .py$ | xargs)
 
   #  checkenv:
   #   name: deploying S3 buckets
@@ -118,84 +117,84 @@ jobs:
   #           echo "GITHUB_REF_NAME=$github_ref_name"
   #           echo "GITHUB_REF_NAME_SLUG=$github_ref_name_SLUG"
   #           echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
-  #  deploys3:
-  #   name: deploying S3 buckets
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: s3
-  #   env:
-  #     ACTION: Init S3 buckets for ECR and ECS with terraform
-  #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-  #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-  #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+   deploys3:
+    name: deploying S3 buckets
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: s3
+    env:
+      ACTION: Init S3 buckets for ECR and ECS with terraform
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
  
-  #   steps:
-  #     - name: Checkout 
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v2
 
-  #     - name: Setup Terraform
-  #       uses: hashicorp/setup-terraform@v1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
 
-  #     - name: Terraform format
-  #       run: terraform fmt -check
-  #       continue-on-error: true
+      - name: Terraform format
+        run: terraform fmt -check
+        continue-on-error: true
 
-  #     - name: Terraform init
-  #       run: terraform init
+      - name: Terraform init
+        run: terraform init
       
-  #     - name: Terraform validate
-  #       run: terraform validate
+      - name: Terraform validate
+        run: terraform validate
 
-  #     - name: Terraform plan
-  #       id: plan
-  #       run: terraform plan
+      - name: Terraform plan
+        id: plan
+        run: terraform plan
 
-  #     - name: Terraform Apply
-  #       run: terraform apply -auto-approve
-  #       continue-on-error: true
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        continue-on-error: true
                 
-  #  deployaws:
-  #   name: deploying aws with terraform 
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: init
-  #   needs: deploys3
-  #   env:
-  #     ACTION: Deploy AWS infrastructure with Terraform
-  #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-  #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-  #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+   deployaws:
+    name: deploying aws with terraform 
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: init
+    needs: deploys3
+    env:
+      ACTION: Deploy AWS infrastructure with Terraform
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
  
-  #   steps:
-  #     - name: Checkout 
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v2
 
-  #     - name: Setup Terraform
-  #       uses: hashicorp/setup-terraform@v1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
 
-  #     - name: Terraform format
-  #       run: terraform fmt -check
-  #       continue-on-error: true
+      - name: Terraform format
+        run: terraform fmt -check
+        continue-on-error: true
 
-  #     - name: Terraform init
-  #       run: terraform init
+      - name: Terraform init
+        run: terraform init
            
-  #     - name: Terraform validate
-  #       run: terraform validate
+      - name: Terraform validate
+        run: terraform validate
 
-  #     - name: Terraform plan
-  #       id: plan
-  #       run: terraform plan
-  #       continue-on-error: true
+      - name: Terraform plan
+        id: plan
+        run: terraform plan
+        continue-on-error: true
 
-  #     # - name: Terraform Plan Status
-  #       # if: steps.plan.outcome == 'failure'
-  #       # run: exit 1
+      # - name: Terraform Plan Status
+        # if: steps.plan.outcome == 'failure'
+        # run: exit 1
 
-  #     - name: Terraform Apply
-  #       run: terraform apply -auto-approve
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
         
    buiildpushback:
     # needs: deployaws
@@ -261,97 +260,97 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
         
-  #  deploytokube:
-  #   needs: [buiildpushfront,buiildpushback]
-  #   env:
-  #     ACTION: Deploy images from ECR to kube with helm
-  #   name: Deploy images from ECR to kube with helm
-  #   defaults:
-  #     run:
-  #       working-directory: deployk8s
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v2
-  #   - name: Configure AWS credentials
-  #     uses: aws-actions/configure-aws-credentials@v1
-  #     with:
-  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-  #   - name: Login to Amazon ECR
-  #     id: login-ecr
-  #     uses: aws-actions/amazon-ecr-login@v1
+   deploytokube:
+    needs: [buiildpushfront,buiildpushback]
+    env:
+      ACTION: Deploy images from ECR to kube with helm
+    name: Deploy images from ECR to kube with helm
+    defaults:
+      run:
+        working-directory: deployk8s
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-  #   - name: Update creditials for kuber
-  #     run: |
-  #       aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
+    - name: Update creditials for kuber
+      run: |
+        aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
     
-  #   - name: Install/upgrade helm chart
-  #     uses: hiberbee/github-action-helm@latest
-  #     with:
-  #       helm-command: upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ \
-                      ## --set container.image=${{ steps.login-ecr.outputs.registry }} \
-                      # -f /helm/var-${GITHUB_REF_NAME}.yaml \
+    - name: Install/upgrade helm chart
+      uses: hiberbee/github-action-helm@latest
+      with:
+        helm-command: upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ \
+                      # --set container.image=${{ steps.login-ecr.outputs.registry }} \
+                      -f /helm/var-${GITHUB_REF_NAME}.yaml \
 
- #  dashboard:
-  #   needs: deploytokube
-  #   env:
-  #     ACTION: Deploy dashboatd and metrics
-  #   name: Deploy dashboatd and metrics
-  #   defaults:
-  #     run:
-  #       working-directory: deployk8s
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v2
-  #   - name: Configure AWS credentials
-  #     uses: aws-actions/configure-aws-credentials@v1
-  #     with:
-  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-  #   - name: Update creditials for kuber
-  #     run: |
-  #       aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
- #    - name: Get admin permissions
-    #   run: |
-    #     kubectl apply -f admin.yaml
-    # - name: Setting up dashboard 
-    #   run: |
-    #     kubectl apply -f dashboard.yaml
-    ### kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
-    ### kubectl proxy
-    ### dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
-    # - name: Setting up metrics
-    #   run: |
-    #     kubectl apply -f metrics-server.yaml   
+  dashboard:
+    needs: deploytokube
+    env:
+      ACTION: Deploy dashboatd and metrics
+    name: Deploy dashboatd and metrics
+    defaults:
+      run:
+        working-directory: deployk8s
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Update creditials for kuber
+      run: |
+        aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
+    - name: Get admin permissions
+      run: |
+        kubectl apply -f admin.yaml
+    - name: Setting up dashboard 
+      run: |
+        kubectl apply -f dashboard.yaml
+    ## kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
+    ## kubectl proxy
+    ## dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
+    - name: Setting up metrics
+      run: |
+        kubectl apply -f metrics-server.yaml   
 
- #  monitoring:
-  #   needs: deploytokube
-  #   env:
-  #     ACTION: Deploy cloudwatsh monitoring and store logs
-  #   name: Deploy cloudwatsh monitoring and store logs
-  #   defaults:
-  #     run:
-  #       working-directory: deployk8s
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v2
-  #   - name: Configure AWS credentials
-  #     uses: aws-actions/configure-aws-credentials@v1
-  #     with:
-  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-  #   - name: Update creditials for kuber
-  #     run: |
-  #       aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
- #    - name: apply
-    #   run: |
-    #     kubectl apply -f cloudwatch
+  monitoring:
+    needs: deploytokube
+    env:
+      ACTION: Deploy cloudwatsh monitoring and store logs
+    name: Deploy cloudwatsh monitoring and store logs
+    defaults:
+      run:
+        working-directory: deployk8s
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Update creditials for kuber
+      run: |
+        aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
+    - name: apply
+      run: |
+        kubectl apply -f cloudwatch
     
 
 

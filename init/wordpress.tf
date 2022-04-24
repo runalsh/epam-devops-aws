@@ -281,32 +281,6 @@ resource "aws_iam_role_policy_attachment" "cloudwatch-logs-full-access" {
   role       = aws_iam_role.eks-worker-node-iam-role.name
 }
 
-# resource "aws_iam_role" "AWSServiceRoleForApplicationInsights" {
-#     name               = "AWSServiceRoleForApplicationInsights"
-#     path               = "/aws-service-role/application-insights.amazonaws.com/"
-#     assume_role_policy = <<POLICY
-# {
-#   "Version": "2012-10-17",
-#   "Statement": [
-#     {
-#       "Effect": "Allow",
-#       "Principal": {
-#         "Service": "application-insights.amazonaws.com"
-#       },
-#       "Action": "sts:AssumeRole"
-#     }
-#   ]
-# }
-# POLICY
-# }
-
-
-# resource "aws_iam_policy_attachment" "CloudwatchApplicationInsightsServiceLinkedRolePolicy-policy-attachment" {
-#     name       = "CloudwatchApplicationInsightsServiceLinkedRolePolicy-policy-attachment"
-#     policy_arn = "arn:aws:iam::aws:policy/aws-service-role/CloudwatchApplicationInsightsServiceLinkedRolePolicy"
-#     roles      = ["AWSServiceRoleForApplicationInsights"]
-# }
-
 
 
 #========== VPC =======================
@@ -504,7 +478,7 @@ resource "aws_security_group" "db_sg" {
 }
 
 resource "aws_cloudwatch_log_group" "eks-logs" {
-  name              = "/aws/eks/eks/cluster"
+  name              = "/aws/eks/epam-py-cluster/"
   retention_in_days = 1
 }
 
@@ -580,8 +554,8 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
         {
             "height": 6,
             "width": 6,
-            "y": 6,
-            "x": 0,
+            "y": 0,
+            "x": 12,
             "type": "metric",
             "properties": {
                 "metrics": [
@@ -659,8 +633,8 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
         {
             "height": 3,
             "width": 6,
-            "y": 0,
-            "x": 12,
+            "y": 3,
+            "x": 18,
             "type": "metric",
             "properties": {
                 "region": "eu-central-1",
@@ -683,7 +657,7 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
         {
             "height": 6,
             "width": 12,
-            "y": 12,
+            "y": 6,
             "x": 0,
             "type": "metric",
             "properties": {
@@ -705,30 +679,6 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
                 "period": 60,
                 "view": "timeSeries",
                 "stacked": false
-            }
-        },
-        {
-            "height": 3,
-            "width": 12,
-            "y": 3,
-            "x": 12,
-            "type": "metric",
-            "properties": {
-                "view": "singleValue",
-                "stacked": false,
-                "metrics": [
-                    [ "ContainerInsights", "pod_number_of_container_restarts", "PodName", "epamapp-back-prod", "ClusterName", "epam-py-cluster", "Namespace", "prod" ],
-                    [ "...", "epamapp-front-prod", ".", ".", ".", "." ],
-                    [ "...", "epamapp-back-dev", ".", ".", ".", "dev" ],
-                    [ "...", "epamapp-front-dev", ".", ".", ".", "." ]
-                ],
-                "region": "eu-central-1",
-                "setPeriodToTimeRange": true,
-                "singleValueFullPrecision": false,
-                "title": "Pods restarts",
-                "period": 300,
-                "sparkline": false,
-                "liveData": false
             }
         },
         {
@@ -757,6 +707,50 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
                 "view": "timeSeries",
                 "stacked": false
             }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 12,
+            "width": 6,
+            "height": 3,
+            "properties": {
+                "metrics": [
+                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "db", { "period": 300, "stat": "Sum" } ]
+                ],
+                "legend": {
+                    "position": "bottom"
+                },
+                "region": "eu-central-1",
+                "liveData": false,
+                "start": "-PT1H",
+                "end": "PT0H",
+                "title": "DatabaseConnections: Sum",
+                "view": "singleValue",
+                "stacked": false
+            }
+        },
+        {
+            "type": "metric",
+            "x": 6,
+            "y": 12,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/RDS", "FreeableMemory", "DBInstanceIdentifier", "db", { "period": 300, "stat": "Average" } ]
+                ],
+                "legend": {
+                    "position": "bottom"
+                },
+                "region": "eu-central-1",
+                "liveData": false,
+                "start": "-PT1H",
+                "end": "PT0H",
+                "title": "Database FreeableMemory: Average",
+                "view": "timeSeries",
+                "stacked": true
+            }
         }
     ]
 }
@@ -771,7 +765,7 @@ resource "aws_eks_cluster" "eks_cluster" {
   name     = var.name
   role_arn = aws_iam_role.eks-cluster.arn
   version    = "1.22"
-  depends_on = [aws_cloudwatch_log_group.eks-logs]
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   vpc_config {
     # endpoint_private_access = true
@@ -781,7 +775,8 @@ resource "aws_eks_cluster" "eks_cluster" {
   }
   depends_on = [
      aws_iam_role_policy_attachment.eks-cluster-policy,
-     aws_iam_role_policy_attachment.eks-vpc-policy
+     aws_iam_role_policy_attachment.eks-vpc-policy,
+     aws_cloudwatch_log_group.eks-logs
   ]
 }
 
@@ -805,7 +800,7 @@ resource "aws_eks_node_group" "nodes" {
   # capacity_type        = "ON_DEMAND"
   capacity_type        = "SPOT"
   force_update_version = false
-  instance_types       = ["t4g.medium"]
+  instance_types       = ["t3.small"]
   ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
   labels               = {
     role = "nodes"
