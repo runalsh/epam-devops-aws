@@ -280,6 +280,35 @@ resource "aws_iam_role_policy_attachment" "cloudwatch-logs-full-access" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
   role       = aws_iam_role.eks-worker-node-iam-role.name
 }
+
+# resource "aws_iam_role" "AWSServiceRoleForApplicationInsights" {
+#     name               = "AWSServiceRoleForApplicationInsights"
+#     path               = "/aws-service-role/application-insights.amazonaws.com/"
+#     assume_role_policy = <<POLICY
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "application-insights.amazonaws.com"
+#       },
+#       "Action": "sts:AssumeRole"
+#     }
+#   ]
+# }
+# POLICY
+# }
+
+
+# resource "aws_iam_policy_attachment" "CloudwatchApplicationInsightsServiceLinkedRolePolicy-policy-attachment" {
+#     name       = "CloudwatchApplicationInsightsServiceLinkedRolePolicy-policy-attachment"
+#     policy_arn = "arn:aws:iam::aws:policy/aws-service-role/CloudwatchApplicationInsightsServiceLinkedRolePolicy"
+#     roles      = ["AWSServiceRoleForApplicationInsights"]
+# }
+
+
+
 #========== VPC =======================
 
 resource "aws_internet_gateway" "igw_main" {
@@ -479,64 +508,322 @@ resource "aws_cloudwatch_log_group" "eks-logs" {
   retention_in_days = 1
 }
 
-# ##=============================EKS
+resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
+  dashboard_name = "eks-cluster-application"
+  dashboard_body = <<EOF
 
-# resource "aws_eks_cluster" "eks_cluster" {
-#   name     = var.name
-#   role_arn = aws_iam_role.eks-cluster.arn
-#   # version    = "1.22"
+{
+    "widgets": [
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "id": "expr1m0", "label": "epam-py-cluster", "expression": "mm1m0 * 100 / mm0m0", "region": "eu-central-1" } ],
+                    [ "ContainerInsights", "node_cpu_limit", "ClusterName", "epam-py-cluster", { "period": 300, "stat": "Sum", "id": "mm0m0", "visible": false, "region": "eu-central-1" } ],
+                    [ "ContainerInsights", "node_cpu_usage_total", "ClusterName", "epam-py-cluster", { "period": 300, "stat": "Sum", "id": "mm1m0", "visible": false, "region": "eu-central-1" } ]
+                ],
+                "legend": {
+                    "position": "bottom"
+                },
+                "title": "CPU Utilization",
+                "yAxis": {
+                    "left": {
+                        "min": 0,
+                        "showUnits": false,
+                        "label": "Percent"
+                    }
+                },
+                "region": "eu-central-1",
+                "liveData": false,
+                "start": "-PT1H",
+                "end": "PT0H",
+                "view": "timeSeries",
+                "stacked": true,
+                "period": 300
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "id": "expr1m0", "label": "epam-py-cluster", "expression": "mm1m0 * 100 / mm0m0" } ],
+                    [ "ContainerInsights", "node_memory_limit", "ClusterName", "epam-py-cluster", { "period": 300, "stat": "Sum", "id": "mm0m0", "visible": false } ],
+                    [ "ContainerInsights", "node_memory_working_set", "ClusterName", "epam-py-cluster", { "period": 300, "stat": "Sum", "id": "mm1m0", "visible": false } ]
+                ],
+                "legend": {
+                    "position": "bottom"
+                },
+                "title": "MemoryUtilization",
+                "yAxis": {
+                    "left": {
+                        "min": 0,
+                        "showUnits": false,
+                        "label": "Percent"
+                    }
+                },
+                "region": "eu-central-1",
+                "liveData": false,
+                "start": "-PT1H",
+                "end": "PT0H",
+                "view": "timeSeries",
+                "stacked": true
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "ContainerInsights", "node_network_total_bytes", "ClusterName", "epam-py-cluster", { "period": 300, "stat": "Average" } ]
+                ],
+                "legend": {
+                    "position": "bottom"
+                },
+                "title": "Network",
+                "region": "eu-central-1",
+                "liveData": false,
+                "start": "-PT1H",
+                "end": "PT0H",
+                "view": "timeSeries",
+                "stacked": true
+            }
+        },
+        {
+            "height": 3,
+            "width": 6,
+            "y": 0,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "ContainerInsights", "cluster_node_count", "ClusterName", "epam-py-cluster", { "period": 300, "stat": "Average" } ]
+                ],
+                "legend": {
+                    "position": "bottom"
+                },
+                "title": "EKS:Clusters.NumberOfNodes",
+                "region": "eu-central-1",
+                "liveData": false,
+                "start": "-PT1H",
+                "end": "PT0H",
+                "view": "singleValue",
+                "stacked": false
+            }
+        },
+        {
+            "height": 6,
+            "width": 12,
+            "y": 12,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "region": "eu-central-1",
+                "title": "Pods Network",
+                "legend": {
+                    "position": "right"
+                },
+                "timezone": "Local",
+                "metrics": [
+                    [ { "id": "expr0m0", "label": "prod epamapp-back-prod pod_network_rx_bytes", "expression": "mm0m0 + mm0farm0", "stat": "Average", "yAxis": "left" } ],
+                    [ { "id": "expr0m1", "label": "prod epamapp-front-prod pod_network_rx_bytes", "expression": "mm0m1 + mm0farm1", "stat": "Average", "yAxis": "left" } ],
+                    [ "ContainerInsights", "pod_network_rx_bytes", "PodName", "epamapp-back-prod", "Namespace", "prod", "ClusterName", "epam-py-cluster", { "id": "mm0m0", "visible": false, "yAxis": "left" } ],
+                    [ "ContainerInsights", "pod_network_rx_bytes", "PodName", "epamapp-front-prod", "Namespace", "prod", "ClusterName", "epam-py-cluster", { "id": "mm0m1", "visible": false, "yAxis": "left" } ],
+                    [ "ContainerInsights", "pod_network_rx_bytes", "ClusterName", "epam-py-cluster", "PodName", "epamapp-back-prod", "Namespace", "prod", "LaunchType", "fargate", { "id": "mm0farm0", "visible": false, "yAxis": "left" } ],
+                    [ "ContainerInsights", "pod_network_rx_bytes", "ClusterName", "epam-py-cluster", "PodName", "epamapp-front-prod", "Namespace", "prod", "LaunchType", "fargate", { "id": "mm0farm1", "visible": false, "yAxis": "left" } ],
+                    [ { "id": "expr1m0", "label": "prod epamapp-back-prod pod_network_tx_bytes", "expression": "mm1m0 + mm1farm0", "stat": "Average", "yAxis": "right" } ],
+                    [ { "id": "expr1m1", "label": "prod epamapp-front-prod pod_network_tx_bytes", "expression": "mm1m1 + mm1farm1", "stat": "Average", "yAxis": "right" } ],
+                    [ "ContainerInsights", "pod_network_tx_bytes", "PodName", "epamapp-back-prod", "Namespace", "prod", "ClusterName", "epam-py-cluster", { "id": "mm1m0", "visible": false, "yAxis": "right" } ],
+                    [ "ContainerInsights", "pod_network_tx_bytes", "PodName", "epamapp-front-prod", "Namespace", "prod", "ClusterName", "epam-py-cluster", { "id": "mm1m1", "visible": false, "yAxis": "right" } ],
+                    [ "ContainerInsights", "pod_network_tx_bytes", "ClusterName", "epam-py-cluster", "PodName", "epamapp-back-prod", "Namespace", "prod", "LaunchType", "fargate", { "id": "mm1farm0", "visible": false, "yAxis": "right" } ],
+                    [ "ContainerInsights", "pod_network_tx_bytes", "ClusterName", "epam-py-cluster", "PodName", "epamapp-front-prod", "Namespace", "prod", "LaunchType", "fargate", { "id": "mm1farm1", "visible": false, "yAxis": "right" } ]
+                ],
+                "start": "-P0DT1H0M0S",
+                "end": "P0D",
+                "liveData": false,
+                "period": 60,
+                "view": "timeSeries",
+                "stacked": false
+            }
+        },
+        {
+            "height": 3,
+            "width": 6,
+            "y": 0,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "region": "eu-central-1",
+                "title": "Number of Pods",
+                "legend": {
+                    "position": "bottom"
+                },
+                "timezone": "Local",
+                "metrics": [
+                    [ "ContainerInsights", "node_number_of_running_pods", "InstanceId", "i-041c900efac984628", "NodeName", "ip-10-0-0-164.eu-central-1.compute.internal", "ClusterName", "epam-py-cluster", { "stat": "Average" } ]
+                ],
+                "start": "-P0DT1H0M0S",
+                "end": "P0D",
+                "liveData": false,
+                "period": 60,
+                "view": "singleValue",
+                "stacked": false
+            }
+        },
+        {
+            "height": 6,
+            "width": 12,
+            "y": 12,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "region": "eu-central-1",
+                "title": "Node CPU Utilization",
+                "legend": {
+                    "position": "right"
+                },
+                "timezone": "Local",
+                "metrics": [
+                    [ "ContainerInsights", "pod_cpu_utilization", "PodName", "epamapp-front-prod", "Namespace", "prod", "ClusterName", "epam-py-cluster", { "stat": "Average" } ],
+                    [ "ContainerInsights", "pod_cpu_utilization", "PodName", "epamapp-back-prod", "Namespace", "prod", "ClusterName", "epam-py-cluster", { "stat": "Average" } ],
+                    [ "ContainerInsights", "pod_cpu_utilization", "PodName", "epamapp-front-dev", "Namespace", "dev", "ClusterName", "epam-py-cluster", { "stat": "Average" } ],
+                    [ "ContainerInsights", "pod_cpu_utilization", "PodName", "epamapp-back-dev", "Namespace", "dev", "ClusterName", "epam-py-cluster", { "stat": "Average" } ]
+                ],
+                "start": "-P0DT1H0M0S",
+                "end": "P0D",
+                "liveData": false,
+                "period": 60,
+                "view": "timeSeries",
+                "stacked": false
+            }
+        },
+        {
+            "height": 3,
+            "width": 12,
+            "y": 3,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "view": "singleValue",
+                "stacked": false,
+                "metrics": [
+                    [ "ContainerInsights", "pod_number_of_container_restarts", "PodName", "epamapp-back-prod", "ClusterName", "epam-py-cluster", "Namespace", "prod" ],
+                    [ "...", "epamapp-front-prod", ".", ".", ".", "." ],
+                    [ "...", "epamapp-back-dev", ".", ".", ".", "dev" ],
+                    [ "...", "epamapp-front-dev", ".", ".", ".", "." ]
+                ],
+                "region": "eu-central-1",
+                "setPeriodToTimeRange": true,
+                "singleValueFullPrecision": false,
+                "title": "Pods restarts",
+                "period": 300,
+                "sparkline": false,
+                "liveData": false
+            }
+        },
+        {
+            "height": 6,
+            "width": 12,
+            "y": 6,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "region": "eu-central-1",
+                "title": "Node Memory Utilization",
+                "legend": {
+                    "position": "right"
+                },
+                "timezone": "Local",
+                "metrics": [
+                    [ "ContainerInsights", "pod_memory_utilization", "PodName", "epamapp-back-prod", "Namespace", "prod", "ClusterName", "epam-py-cluster", { "stat": "Average" } ],
+                    [ "ContainerInsights", "pod_memory_utilization", "PodName", "epamapp-front-prod", "Namespace", "prod", "ClusterName", "epam-py-cluster", { "stat": "Average" } ],
+                    [ "ContainerInsights", "pod_memory_utilization", "PodName", "epamapp-front-dev", "Namespace", "dev", "ClusterName", "epam-py-cluster", { "stat": "Average" } ],
+                    [ "ContainerInsights", "pod_memory_utilization", "PodName", "epamapp-back-dev", "Namespace", "dev", "ClusterName", "epam-py-cluster", { "stat": "Average" } ]
+                ],
+                "start": "-P0DT1H0M0S",
+                "end": "P0D",
+                "liveData": false,
+                "period": 60,
+                "view": "timeSeries",
+                "stacked": false
+            }
+        }
+    ]
+}
 
-#   vpc_config {
-#     # endpoint_private_access = true
-#     # endpoint_public_access  = true
-#     security_group_ids = [aws_security_group.cluster_sg.id]
-#     subnet_ids = aws_subnet.subnets[*].id
-#   }
-#   depends_on = [
-#      aws_iam_role_policy_attachment.eks-cluster-policy,
-#      aws_iam_role_policy_attachment.eks-vpc-policy
-#   ]
-# }
+EOF
+}
 
-# resource "aws_eks_node_group" "nodes" {
-#   cluster_name    = aws_eks_cluster.eks_cluster.name
-#   node_group_name = "nodes"
-#   node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
-#   subnet_ids      = aws_subnet.subnets[*].id
-#   scaling_config {
-#     desired_size = 1
-#     max_size     = 2
-#     min_size     = 1
-#   }
 
-# #    remote_access {
-# #      ec2_ssh_key = var.key_name2
-# #     source_security_group_ids = [aws_security_group.sg_main.id]
-# #    }
+##=============================EKS
 
-#   disk_size            = 8
-#   # capacity_type        = "ON_DEMAND"
-#   capacity_type        = "SPOT"
-#   force_update_version = false
-#   instance_types       = ["t3.small"]
-#   ###  you should chose instance with > 8 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
-#   labels               = {
-#     role = "nodes"
-#   }
+resource "aws_eks_cluster" "eks_cluster" {
+  name     = var.name
+  role_arn = aws_iam_role.eks-cluster.arn
+  version    = "1.22"
+  depends_on = [aws_cloudwatch_log_group.eks-logs]
 
-#   depends_on = [
-#     aws_iam_role_policy_attachment.eks-worker-node-policy,
-#     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
-#     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
-#     aws_iam_role_policy_attachment.cloudwatch-logs-full-access
-#   ]
-# }
+  vpc_config {
+    # endpoint_private_access = true
+    # endpoint_public_access  = true
+    security_group_ids = [aws_security_group.cluster_sg.id]
+    subnet_ids = aws_subnet.subnets[*].id
+  }
+  depends_on = [
+     aws_iam_role_policy_attachment.eks-cluster-policy,
+     aws_iam_role_policy_attachment.eks-vpc-policy
+  ]
+}
 
-# provider "kubernetes" {
-#   host                   = data.aws_eks_cluster.eks_cluster.endpoint
-#   token                  = data.aws_eks_cluster_auth.eks_cluster.token
-#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
-# }
+resource "aws_eks_node_group" "nodes" {
+  cluster_name    = aws_eks_cluster.eks_cluster.name
+  node_group_name = "nodes"
+  node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
+  subnet_ids      = aws_subnet.subnets[*].id
+  scaling_config {
+    desired_size = 1
+    max_size     = 2
+    min_size     = 1
+  }
+
+#    remote_access {
+#      ec2_ssh_key = var.key_name2
+#     source_security_group_ids = [aws_security_group.sg_main.id]
+#    }
+
+  disk_size            = 8
+  # capacity_type        = "ON_DEMAND"
+  capacity_type        = "SPOT"
+  force_update_version = false
+  instance_types       = ["t4g.medium"]
+  ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
+  labels               = {
+    role = "nodes"
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.eks-worker-node-policy,
+    aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
+    aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
+    aws_iam_role_policy_attachment.cloudwatch-logs-full-access
+  ]
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.eks_cluster.endpoint
+  token                  = data.aws_eks_cluster_auth.eks_cluster.token
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
+}
 
 
 # #=========  not scale ======================
