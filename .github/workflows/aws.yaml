@@ -441,8 +441,21 @@ jobs:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run:
-        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml
-    # --set container.image=${{ steps.login-ecr.outputs.registry }} \
+        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ \
+         -f helm/var-${GITHUB_REF_NAME}.yaml
+    ## --set container.image=${{ steps.login-ecr.outputs.registry }} \
+    # - name: Install/upgrade helm chart (NEW)
+    #   env:
+    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    #   run: |
+    #     export dbhost=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
+    #     echo $dbhost
+    #     helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ \
+    #       -f helm/var-${GITHUB_REF_NAME}.yaml \
+    #       --set ecrname=${{ steps.login-ecr.outputs.registry }} \
+    #       --set dbhost=$dbhost
+
     
     - name: send message to tg
       if: ${{ failure() }}
