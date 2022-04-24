@@ -284,7 +284,7 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
     - name: Update creditials for kuber
       run: |
-        aws eks update-kubeconfig --name --name epam-py-cluster
+        aws eks update-kubeconfig --name "epam-py-cluster"
 
     - name: Configure Kubeconfig
       id: kube_config_data
@@ -295,7 +295,7 @@ jobs:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run: |
-        aws eks update-kubeconfig --name epam-py-cluster
+        aws eks update-kubeconfig --name "epam-py-cluster"
         kubectl config current-context
     - name: Install/upgrade helm chart
       uses: hiberbee/github-action-helm@latest
