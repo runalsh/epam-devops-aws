@@ -86,9 +86,6 @@ spec:
       - name: {{ .Values.container.name }}-front-{{ .Values.namespace }}
         image: {{ .Values.ecrname }}/{{ .Values.container.name }}-front-{{ .Values.namespace }}
         imagePullPolicy: Always
-        env:
-        - name: backapp
-          value: epamapp-back
         livenessProbe:
           httpGet:
             path: /ping
@@ -223,4 +220,9 @@ spec:
       target:
         type: Value
         value: 10k
+
+---
+
+
+
 

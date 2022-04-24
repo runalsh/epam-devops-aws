@@ -1,5 +1,3 @@
-  
-
 #==== prov ======================
 
 terraform {
@@ -278,6 +276,10 @@ resource "aws_iam_role_policy_attachment" "eks-worker-node-ec2-container-registr
   role       = aws_iam_role.eks-worker-node-iam-role.name
 }
 
+resource "aws_iam_role_policy_attachment" "cloudwatch-logs-full-access" {
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+  role       = aws_iam_role.eks-worker-node-iam-role.name
+}
 #========== VPC =======================
 
 resource "aws_internet_gateway" "igw_main" {
@@ -472,6 +474,11 @@ resource "aws_security_group" "db_sg" {
   ]
 }
 
+resource "aws_cloudwatch_log_group" "eks-logs" {
+  name              = "/aws/eks/eks/cluster"
+  retention_in_days = 1
+}
+
 # ##=============================EKS
 
 # resource "aws_eks_cluster" "eks_cluster" {
@@ -521,6 +528,7 @@ resource "aws_security_group" "db_sg" {
 #     aws_iam_role_policy_attachment.eks-worker-node-policy,
 #     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
 #     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
+#     aws_iam_role_policy_attachment.cloudwatch-logs-full-access
 #   ]
 # }
 
