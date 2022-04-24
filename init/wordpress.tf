@@ -57,20 +57,19 @@ variable "instance_type" {
 variable "lifecycle_rules" {
   default = [{
     rule_priority   = 1
+    description = "more 5 images"
     tag_status      = "tagged"
     tag_prefix_list = ["back", "front"]
     count_type      = "sinceImagePushed"
-    count_number    = 2
+    count_number    = 5
     },
     {
-      "rulePriority": 1,
-            "description": "Expire older than 2 days",
-            "selection": {
-            "tagStatus": "untagged",
-            "countType": "sinceImagePushed",
-            "countUnit": "days",
-            "countNumber": 2
-            }}]
+    rule_priority: 2
+    description = "older than 2 days"
+    tag_status = "untagged"
+    count_type = "sinceImagePushed"
+    count_number = 2
+            }]
 }
 
 #========== S3 ==============
