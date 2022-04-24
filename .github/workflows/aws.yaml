@@ -335,6 +335,17 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+    - name: Scan Docker image
+      id: docker-scan
+      uses: alexjurkiewicz/ecr-scan-image@v1.7.0
+      with:
+        repository: $ECR_REPOSITORY-${GITHUB_REF_NAME}
+        tag: ${{ steps.build-image.outputs.IMAGE_TAG }}
+        fail_threshold: high
+        # ignore_list: |
+        #   CVE-2020-28928
+      # Access scan results in later steps
+    - run: echo "${{ steps.docker-scan.outputs.total }} total vulnerabilities."    
     
     - name: send message to tg
       if: ${{ failure() }}
@@ -383,7 +394,18 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
-    
+    - name: Scan Docker image
+      id: docker-scan
+      uses: alexjurkiewicz/ecr-scan-image@v1.7.0
+      with:
+        repository: $ECR_REPOSITORY-${GITHUB_REF_NAME}
+        tag: ${{ steps.build-image.outputs.IMAGE_TAG }}
+        fail_threshold: high
+        # ignore_list: |
+        #   CVE-2020-28928
+      # Access scan results in later steps
+    - run: echo "${{ steps.docker-scan.outputs.total }} total vulnerabilities." 
+
     - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
@@ -399,7 +421,7 @@ jobs:
           *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-
+    
 
   deploytokube:
     needs: [buiildpushfront,buiildpushback]
