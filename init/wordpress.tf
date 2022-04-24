@@ -54,23 +54,6 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
-variable "lifecycle_rules" {
-  default = [{
-    rule_priority   = 1
-    description = "more 5 images"
-    tag_status      = "tagged"
-    tag_prefix_list = ["back", "front"]
-    count_type      = "sinceImagePushed"
-    count_number    = 5
-    },
-    {
-    rule_priority: 2
-    description = "older than 2 days"
-    tag_status = "untagged"
-    count_type = "sinceImagePushed"
-    count_number = 2
-            }]
-}
 
 #========== S3 ==============
 
@@ -96,6 +79,7 @@ terraform {
 
 resource "aws_ecr_repository" "app_repo_back_prod" {
   name = "epamapp-back-prod"
+  image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -104,11 +88,31 @@ resource "aws_ecr_repository" "app_repo_back_prod" {
 
 resource "aws_ecr_lifecycle_policy" "repo_policy_back_prod" {
   repository = aws_ecr_repository.app_repo_back_prod.name
-  policy =  jsonencode({ "rules" : var.lifecycle_rules })
+
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "more 5 to trash",
+      "selection": {
+        "tagStatus": "tagged",
+        "tagPrefixList": ["prod","back"],
+        "countType": "imageCountMoreThan",
+        "countNumber": 5
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_ecr_repository" "app_repo_front_prod" {
   name = "epamapp-front-prod"
+  image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -117,11 +121,31 @@ resource "aws_ecr_repository" "app_repo_front_prod" {
 
 resource "aws_ecr_lifecycle_policy" "repo_policy_front_prod" {
   repository = aws_ecr_repository.app_repo_front_prod.name
-  policy =  jsonencode({ "rules" : var.lifecycle_rules })
+
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "more 5 to trash",
+      "selection": {
+        "tagStatus": "tagged",
+        "tagPrefixList": ["prod","back"],
+        "countType": "imageCountMoreThan",
+        "countNumber": 5
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_ecr_repository" "app_repo_back_dev" {
   name = "epamapp-back-dev"
+  image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -130,11 +154,31 @@ resource "aws_ecr_repository" "app_repo_back_dev" {
 
 resource "aws_ecr_lifecycle_policy" "repo_policy_back_dev" {
   repository = aws_ecr_repository.app_repo_back_dev.name
-  policy =  jsonencode({ "rules" : var.lifecycle_rules })
+
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "more 5 to trash",
+      "selection": {
+        "tagStatus": "tagged",
+        "tagPrefixList": ["prod","back"],
+        "countType": "imageCountMoreThan",
+        "countNumber": 5
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_ecr_repository" "app_repo_front_dev" {
   name = "epamapp-front-dev"
+  image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -143,7 +187,26 @@ resource "aws_ecr_repository" "app_repo_front_dev" {
 
 resource "aws_ecr_lifecycle_policy" "repo_policy_front_dev" {
   repository = aws_ecr_repository.app_repo_front_dev.name
-  policy =  jsonencode({ "rules" : var.lifecycle_rules })
+
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "more 5 to trash",
+      "selection": {
+        "tagStatus": "tagged",
+        "tagPrefixList": ["prod","back"],
+        "countType": "imageCountMoreThan",
+        "countNumber": 5
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
 }
 
 #============ RES ==========
