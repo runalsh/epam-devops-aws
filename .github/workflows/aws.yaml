@@ -349,7 +349,7 @@ jobs:
   #       kubectl apply -f metrics-server.yaml   
 
   monitoring:
-    needs: dashboard
+    # needs: dashboard
     env:
       ACTION: Deploy cloudwatch monitoring with fluentd and store logs
     name: Deploy cloudwatch monitoring with fluentd and store logs
