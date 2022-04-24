@@ -283,7 +283,20 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
     - name: Update creditials for kuber
-      run: kubectl --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
+      run: |
+        aws eks update-kubeconfig --name --name epam-py-cluster
+
+    - name: Configure Kubeconfig
+      id: kube_config_data
+      run: echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    
+    - name: Deploy to EKS
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        aws eks update-kubeconfig --name epam-py-cluster
+        kubectl config current-context
     - name: Install/upgrade helm chart
       uses: hiberbee/github-action-helm@latest
       with:
