@@ -118,6 +118,7 @@ jobs:
   #           echo "GITHUB_REF_NAME_SLUG=$github_ref_name_SLUG"
   #           echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
   deploys3:
+    needs: [pytest, pylint, bandit, sonarcloud]
     name: deploying S3 buckets
     runs-on: ubuntu-latest
     defaults:
@@ -155,12 +156,12 @@ jobs:
         continue-on-error: true
                 
   deployaws:
+    needs: deploys3
     name: deploying aws with terraform 
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: init
-    needs: deploys3
     env:
       ACTION: Deploy AWS infrastructure with Terraform
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
@@ -197,7 +198,7 @@ jobs:
         run: terraform apply -auto-approve
         
   buiildpushback:
-    # needs: deployaws
+    needs: deployaws
     env:
       ACTION: Push backend image to AWS ECR
     name: Push backend image to AWS ECR
@@ -229,7 +230,7 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
 
   buiildpushfront:
-    # needs: deployaws
+    needs: deployaws
     env:
       ACTION: Push frontend image to AWS ECR
     name: Push frontend image to AWS ECR
@@ -311,6 +312,10 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1    
+      
     - name: Update creditials for kuber
       run: |
         aws eks --region ${{ secrets.AWS_DEFAULT_REGION }} update-kubeconfig --name epam-py-cluster
@@ -328,7 +333,7 @@ jobs:
         kubectl apply -f metrics-server.yaml   
 
   monitoring:
-    needs: deploytokube
+    needs: dashboard
     env:
       ACTION: Deploy cloudwatsh monitoring and store logs
     name: Deploy cloudwatsh monitoring and store logs
