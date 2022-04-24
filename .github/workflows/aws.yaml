@@ -33,7 +33,7 @@ jobs:
       run: |
         pytest
     
-    - name: send massage to tg
+    - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
       with:
@@ -48,18 +48,18 @@ jobs:
             *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-    - name: Send Gmail notification
-      if: ${{ failure() }}
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.yandex.ru
-        server_port: 465
-        username: ${{secrets.YANDEX_MAIL_USERNAME}}
-        password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-        subject: ${{ github.job }} job has ${{ job.status }}
-        to: ${{ secrets.MAIL_FOR_INFO }}
-        from: github action mailer
-        body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+    # - name: Send Gmail notification
+    #   if: ${{ failure() }}
+    #   uses: dawidd6/action-send-mail@v3
+    #   with:
+    #     server_address: smtp.yandex.ru
+    #     server_port: 465
+    #     username: ${{secrets.YANDEX_MAIL_USERNAME}}
+    #     password: ${{secrets.YANDEX_MAIL_PASSWORD}}
+    #     subject: ${{ github.job }} job has ${{ job.status }}
+    #     to: ${{ secrets.MAIL_FOR_INFO }}
+    #     from: github action mailer
+    #     body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
  
   bandit:
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
       run: |
         bandit -c bandit.yml -s B104,B608,B201,B101 -r .
     
-    - name: send massage to tg
+    - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
       with:
@@ -99,18 +99,6 @@ jobs:
             *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-    - name: Send Gmail notification
-      if: ${{ failure() }}
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.yandex.ru
-        server_port: 465
-        username: ${{secrets.YANDEX_MAIL_USERNAME}}
-        password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-        subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-        to: ${{ secrets.MAIL_FOR_INFO }}
-        from: github action mailer
-        body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
     
   sonarcloud:
     needs: pytest
@@ -128,7 +116,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     
-    - name: send massage to tg
+    - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
       with:
@@ -143,18 +131,6 @@ jobs:
             *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-    - name: Send Gmail notification
-      if: ${{ failure() }}
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.yandex.ru
-        server_port: 465
-        username: ${{secrets.YANDEX_MAIL_USERNAME}}
-        password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-        subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-        to: ${{ secrets.MAIL_FOR_INFO }}
-        from: github action mailer
-        body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
 
 
   pylint:
@@ -180,7 +156,7 @@ jobs:
       run: |
         pylint --exit-zero $(ls -R | grep .py$ | xargs)
     
-    - name: send massage to tg
+    - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
       with:
@@ -195,18 +171,6 @@ jobs:
             *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-    - name: Send Gmail notification
-      if: ${{ failure() }}
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.yandex.ru
-        server_port: 465
-        username: ${{secrets.YANDEX_MAIL_USERNAME}}
-        password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-        subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-        to: ${{ secrets.MAIL_FOR_INFO }}
-        from: github action mailer
-        body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
         
   #  checkenv:
   #   name: deploying S3 buckets
@@ -265,7 +229,7 @@ jobs:
         run: terraform apply -auto-approve
         continue-on-error: true
       
-      - name: send massage to tg
+      - name: send message to tg
         if: ${{ failure() }}
         uses: appleboy/telegram-action@master
         with:
@@ -280,18 +244,6 @@ jobs:
             *Status:* ${{ job.status }}
           format: "markdown"
           disable_web_page_preview: true
-      - name: Send Gmail notification
-        if: ${{ failure() }}
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.yandex.ru
-          server_port: 465
-          username: ${{secrets.YANDEX_MAIL_USERNAME}}
-          password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-          subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-          to: ${{ secrets.MAIL_FOR_INFO }}
-          from: github action mailer
-          body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
 
 
   deployaws:
@@ -336,7 +288,7 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
 
-      - name: send massage to tg
+      - name: send message to tg
         if: ${{ failure() }}
         uses: appleboy/telegram-action@master
         with:
@@ -351,18 +303,6 @@ jobs:
             *Status:* ${{ job.status }}
           format: "markdown"
           disable_web_page_preview: true
-      - name: Send Gmail notification
-        if: ${{ failure() }}
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.yandex.ru
-          server_port: 465
-          username: ${{secrets.YANDEX_MAIL_USERNAME}}
-          password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-          subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-          to: ${{ secrets.MAIL_FOR_INFO }}
-          from: github action mailer
-          body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}  
         
   buiildpushback:
     needs: deployaws
@@ -396,7 +336,7 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
     
-    - name: send massage to tg
+    - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
       with:
@@ -411,19 +351,6 @@ jobs:
           *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-    - name: Send Gmail notification
-      if: ${{ failure() }}
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.yandex.ru
-        server_port: 465
-        username: ${{secrets.YANDEX_MAIL_USERNAME}}
-        password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-        subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-        to: ${{ secrets.MAIL_FOR_INFO }}
-        from: github action mailer
-        body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-
 
   buiildpushfront:
     needs: deployaws
@@ -457,7 +384,7 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
     
-    - name: send massage to tg
+    - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
       with:
@@ -472,18 +399,6 @@ jobs:
           *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-    - name: Send Gmail notification
-      if: ${{ failure() }}
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.yandex.ru
-        server_port: 465
-        username: ${{secrets.YANDEX_MAIL_USERNAME}}
-        password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-        subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-        to: ${{ secrets.MAIL_FOR_INFO }}
-        from: github action mailer
-        body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}        
 
 
   deploytokube:
@@ -529,7 +444,7 @@ jobs:
         helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml
     # --set container.image=${{ steps.login-ecr.outputs.registry }} \
     
-    - name: send massage to tg
+    - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
       with:
@@ -544,18 +459,6 @@ jobs:
           *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-    - name: Send Gmail notification
-      if: ${{ failure() }}
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.yandex.ru
-        server_port: 465
-        username: ${{secrets.YANDEX_MAIL_USERNAME}}
-        password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-        subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-        to: ${{ secrets.MAIL_FOR_INFO }}
-        from: github action mailer
-        body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
 
 
   dashboard:
@@ -602,7 +505,7 @@ jobs:
       run: |
         kubectl apply -f metrics-server.yaml   
 
-    - name: send massage to tg
+    - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
       with:
@@ -617,18 +520,6 @@ jobs:
           *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-    - name: Send Gmail notification
-      if: ${{ failure() }}
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.yandex.ru
-        server_port: 465
-        username: ${{secrets.YANDEX_MAIL_USERNAME}}
-        password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-        subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-        to: ${{ secrets.MAIL_FOR_INFO }}
-        from: github action mailer
-        body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
 
   monitoring:
     needs: dashboard
@@ -664,7 +555,7 @@ jobs:
       run: |
         kubectl apply -f cloudwatch
 
-    - name: send massage to tg
+    - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
       with:
@@ -679,18 +570,6 @@ jobs:
           *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
-    - name: Send Gmail notification
-      if: ${{ failure() }}
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.yandex.ru
-        server_port: 465
-        username: ${{secrets.YANDEX_MAIL_USERNAME}}
-        password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-        subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-        to: ${{ secrets.MAIL_FOR_INFO }}
-        from: github action mailer
-        body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}  
 
 
 
