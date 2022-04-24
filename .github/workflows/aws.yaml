@@ -11,7 +11,7 @@ on:
      # - '.github/workflows/**'
 
 jobs:
-   pytest:
+  pytest:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -57,7 +57,7 @@ jobs:
         bandit -c bandit.yml -s B104,B608,B201,B101 -r .
  
     
-   sonarcloud:
+  sonarcloud:
     needs: pytest
     runs-on: ubuntu-latest
     steps:
@@ -75,7 +75,7 @@ jobs:
 
 
 
-   pylint:
+  pylint:
     needs: pytest
     runs-on: ubuntu-latest
     defaults:
@@ -117,7 +117,7 @@ jobs:
   #           echo "GITHUB_REF_NAME=$github_ref_name"
   #           echo "GITHUB_REF_NAME_SLUG=$github_ref_name_SLUG"
   #           echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
-   deploys3:
+  deploys3:
     name: deploying S3 buckets
     runs-on: ubuntu-latest
     defaults:
@@ -154,7 +154,7 @@ jobs:
         run: terraform apply -auto-approve
         continue-on-error: true
                 
-   deployaws:
+  deployaws:
     name: deploying aws with terraform 
     runs-on: ubuntu-latest
     defaults:
@@ -196,7 +196,7 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
         
-   buiildpushback:
+  buiildpushback:
     # needs: deployaws
     env:
       ACTION: Push backend image to AWS ECR
@@ -228,7 +228,7 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
 
-   buiildpushfront:
+  buiildpushfront:
     # needs: deployaws
     env:
       ACTION: Push frontend image to AWS ECR
@@ -260,7 +260,7 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
         
-   deploytokube:
+  deploytokube:
     needs: [buiildpushfront,buiildpushback]
     env:
       ACTION: Deploy images from ECR to kube with helm
