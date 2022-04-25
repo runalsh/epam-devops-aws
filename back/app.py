@@ -71,7 +71,6 @@ def storedata():
 def stress_test():
     prew = cur = 1
     element = 1500000
-
     for _ in range(int(element-2)):
         prew, cur = cur, prew +     
 
@@ -166,13 +165,13 @@ def showmeallweather():
 @app.route("/stress30")
 def stress30():
     cpustress(STRESSTIME)
-    return "Host %s stressed for 30 sec.\n" % (host) 
+    return "Host %s stressed for 30 sec.\n" %(host) 
      
 @app.route('/stress')
 def stress():
     timestamp = datetime.today().replace(microsecond=0)
     stress_test()
-    return "Host %s stressed.\n" % (host)
+    return "Host %s stressed.\n" %(host)
 
 @app.route("/cpu")
 def cpu():
