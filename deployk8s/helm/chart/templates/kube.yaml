@@ -192,7 +192,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .Values.container.name }}-back
+    name: {{ .Values.container.name }}-back-{{ .Values.namespace }}
   minReplicas: 1
   maxReplicas: 4
   metrics:
@@ -213,7 +213,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .Values.container.name }}-front
+    name: {{ .Values.container.name }}-front-{{ .Values.namespace }}
   minReplicas: 1
   maxReplicas: 4
   metrics:
