@@ -131,7 +131,7 @@ def cpustress(seconds):
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-metrics = PrometheusMetrics(app)
+# metrics = PrometheusMetrics(app)
 
 @app.route('/ping')
 def ping():
