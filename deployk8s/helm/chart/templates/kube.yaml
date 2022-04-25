@@ -209,6 +209,11 @@ kind: HorizontalPodAutoscaler
 metadata:
   namespace: {{ .Values.namespace }}
   name: {{ .Values.container.name }}-front-{{ .Values.namespace }}-scaler
+  annotations:
+    metric-config.pods.requests-per-second.json-path/json-key: "$.http_server.rps"
+    metric-config.pods.requests-per-second.json-path/path: /metrics
+    metric-config.pods.requests-per-second.json-path/port: "80"
+    metric-config.object.requests-per-second.prometheus/per-replica: "true"
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
