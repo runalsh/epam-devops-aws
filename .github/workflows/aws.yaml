@@ -304,132 +304,104 @@ jobs:
   #         format: "markdown"
   #         disable_web_page_preview: true
         
-  buiildpushback:
-    # needs: deployaws
-    env:
-      ACTION: Build and Push backend image to AWS ECR
-    name:  Build and Push backend image to AWS ECR
-    defaults:
-      run:
-        working-directory: back
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-back
-          IMAGE_TAG: back-${{ github.sha }}
-      run: |
-        echo "::set-output name=tag::$IMAGE_TAG"
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
-    - name: Scan Docker image
-      id: docker-scan
-      env:
-          ECR_REPOSITORY: epamapp-back
-      uses: alexjurkiewicz/ecr-scan-image@v1.7.0
-      with:
-        repository: $ECR_REPOSITORY-${GITHUB_REF_NAME}
-        tag: ${{ steps.build-image.outputs.tag }}
-        fail_threshold: high
-        # ignore_list: |
-        #   CVE-2020-28928
-      # Access scan results in later steps
-    - run: echo "${{ steps.docker-scan.outputs.total }} total vulnerabilities."    
-    
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          ${{ github.actor }} created commit:
-          *Commit message:* ${{ github.event.commits[0].message }}
-          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-          *Action:* ${{ env.ACTION }}
-          *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
+  # buiildpushback:
+  #   needs: deployaws
+  #   env:
+  #     ACTION: Build and Push backend image to AWS ECR
+  #   name:  Build and Push backend image to AWS ECR
+  #   defaults:
+  #     run:
+  #       working-directory: back
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1
+  #   - name: Build, tag, and push image to Amazon ECR
+  #     id: build-image
+  #     env:
+  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #         ECR_REPOSITORY: epamapp-back
+  #         IMAGE_TAG: back-${{ github.sha }}
+  #     run: |
 
-  buiildpushfront:
-    # needs: deployaws
-    env:
-      ACTION:  Build and Push frontend image to AWS ECR
-    name:  Build and Push frontend image to AWS ECR
-    defaults:
-      run:
-        working-directory: front
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-front
-          IMAGE_TAG: front-${{ github.sha }}
-      run: |
-        echo "::set-output name=tag::$IMAGE_TAG"
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
-    - name: Scan Docker image
-      id: docker-scan
-      env:
-          ECR_REPOSITORY: epamapp-back
-      uses: alexjurkiewicz/ecr-scan-image@v1.7.0
-      with:
-        repository: $ECR_REPOSITORY-${GITHUB_REF_NAME}
-        tag: ${{ steps.build-image.outputs.tag }}
-        fail_threshold: high
-        # ignore_list: |
-        #   CVE-2020-28928
-      # Access scan results in later steps
-    - run: echo "${{ steps.docker-scan.outputs.total }} total vulnerabilities." 
+  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
 
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          ${{ github.actor }} created commit:
-          *Commit message:* ${{ github.event.commits[0].message }}
-          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-          *Action:* ${{ env.ACTION }}
-          *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #         ${{ github.actor }} created commit:
+  #         *Commit message:* ${{ github.event.commits[0].message }}
+  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #         *Action:* ${{ env.ACTION }}
+  #         *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
+
+  # buiildpushfront:
+  #   needs: deployaws
+  #   env:
+  #     ACTION:  Build and Push frontend image to AWS ECR
+  #   name:  Build and Push frontend image to AWS ECR
+  #   defaults:
+  #     run:
+  #       working-directory: front
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1
+  #   - name: Build, tag, and push image to Amazon ECR
+  #     id: build-image
+  #     env:
+  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #         ECR_REPOSITORY: epamapp-front
+  #         IMAGE_TAG: front-${{ github.sha }}
+  #     run: |
+  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TA
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #         ${{ github.actor }} created commit:
+  #         *Commit message:* ${{ github.event.commits[0].message }}
+  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #         *Action:* ${{ env.ACTION }}
+  #         *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
 
   deploytokube:
-    needs: [buiildpushfront,buiildpushback]
+    # needs: [buiildpushfront,buiildpushback]
     env:
       ACTION: Deploy images from ECR to kube with helm
     name: Deploy images from ECR to kube with helm
