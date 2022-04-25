@@ -1,5 +1,3 @@
-  
-
 #!/usr/bin/python3
 
 import psycopg2
@@ -68,12 +66,6 @@ def storedata():
     # connection.commit()
     connection.close()
 
-def stress_test():
-    prew = cur = 1
-    element = 1500000
-    for _ in range(int(element-2)):
-        prew, cur = cur, prew +     
-
 def tablewipe():
     connection = psycopg2.connect(**db)
     connection.autocommit = True
@@ -129,7 +121,6 @@ def cpustress(seconds):
             x=a*a
             x=1.3333*x/(a+7.7777)
             a+=1
-
         if (time() - start) > seconds:
             break
 
@@ -160,18 +151,12 @@ def showmeallweather():
 # @app.route('/stress/<int:seconds>')
 # def stresssec(seconds):
 #     pystress(seconds, 1)
-#     return Response('shake me %host')
+#     return "shake me at %s" %(host)
 
-@app.route("/stress30")
+@app.route("/stress")
 def stress30():
     cpustress(STRESSTIME)
-    return "Host %s stressed for 30 sec.\n" %(host) 
-     
-# @app.route('/stress')
-# def stress():
-#     timestamp = datetime.today().replace(microsecond=0)
-#     stress_test()
-#     return "Host %s stressed.\n" %(host)
+    return "Host %s stressed for 30 sec.\n" %(host)
 
 @app.route("/cpu")
 def cpu():
