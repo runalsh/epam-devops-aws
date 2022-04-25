@@ -127,10 +127,6 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app: {{ .Values.container.name }}-front-{{ .Values.namespace }}
-  # annotations:
-  #   service.beta.kubernetes.io/aws-load-balancer-type: nlb
-  #   service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
-  #   service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0  
 spec:
   type: LoadBalancer
   selector:
@@ -209,11 +205,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   namespace: {{ .Values.namespace }}
   name: {{ .Values.container.name }}-front-{{ .Values.namespace }}-scaler
-  annotations:
-    metric-config.pods.requests-per-second.json-path/json-key: "$.http_server.rps"
-    metric-config.pods.requests-per-second.json-path/path: /metrics
-    metric-config.pods.requests-per-second.json-path/port: "80"
-    metric-config.object.requests-per-second.prometheus/per-replica: "true"
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -235,17 +226,6 @@ spec:
   #     target:
   #       type: AverageValue
   #       averageValue: 200
-  - type: Object
-    object:
-      metric:
-        name: requests-per-second
-      describedObject:
-        apiVersion: networking.k8s.io/v1
-        kind: Ingress
-        name: main-route
-      target:
-        type: Value
-        value: 1k
 
 
 
