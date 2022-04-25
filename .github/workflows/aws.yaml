@@ -365,7 +365,7 @@ jobs:
         disable_web_page_preview: true
 
   buiildpushfront:
-    needs: deployaws
+    # needs: deployaws
     env:
       ACTION:  Build and Push frontend image to AWS ECR
     name:  Build and Push frontend image to AWS ECR
