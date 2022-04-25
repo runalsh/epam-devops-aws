@@ -338,6 +338,8 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
     - name: Scan Docker image
       id: docker-scan
+      env:
+          ECR_REPOSITORY: epamapp-back
       uses: alexjurkiewicz/ecr-scan-image@v1.7.0
       with:
         repository: $ECR_REPOSITORY-${GITHUB_REF_NAME}
@@ -398,6 +400,8 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
     - name: Scan Docker image
       id: docker-scan
+      env:
+          ECR_REPOSITORY: epamapp-back
       uses: alexjurkiewicz/ecr-scan-image@v1.7.0
       with:
         repository: $ECR_REPOSITORY-${GITHUB_REF_NAME}
