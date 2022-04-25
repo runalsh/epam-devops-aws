@@ -1,11 +1,11 @@
 on:
   push:
-    branches: [ dev ]
+    branches: [ prod ]
     paths-ignore:
       - '*.md'
      # - '.github/workflows/**'
   pull_request:
-    branches: [ dev ]
+    branches: [ prod ]
     paths-ignore:
       - '*.md'
      # - '.github/workflows/**'
