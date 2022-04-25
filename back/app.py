@@ -40,7 +40,6 @@ db = {
       "database": os.getenv('DB_NAME')
 }
 
-
 def storedata():
     connection = psycopg2.connect(**db)
     connection.autocommit = True
