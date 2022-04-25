@@ -444,7 +444,11 @@ jobs:
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
         echo $dbhostdescribe
         helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe
-
+    - name: Show our app resources in ${GITHUB_REF_NAME} namespace
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+      run: |
+        kubectl get all -o wide -n ${GITHUB_REF_NAME}
     - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
