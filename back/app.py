@@ -177,7 +177,7 @@ def stress10():
 def stress():
     timestamp = datetime.today().replace(microsecond=0)
     stress_test()
-    return "Host %host: stressed.\n" % (host)
+    return "Host %host: %s stressed in %ss.\n" % (host,timestamp)
 
 @app.route("/cpu")
 def cpu():
