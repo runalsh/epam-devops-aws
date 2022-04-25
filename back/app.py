@@ -167,11 +167,11 @@ def stress30():
     cpustress(STRESSTIME)
     return "Host %s stressed for 30 sec.\n" %(host) 
      
-@app.route('/stress')
-def stress():
-    timestamp = datetime.today().replace(microsecond=0)
-    stress_test()
-    return "Host %s stressed.\n" %(host)
+# @app.route('/stress')
+# def stress():
+#     timestamp = datetime.today().replace(microsecond=0)
+#     stress_test()
+#     return "Host %s stressed.\n" %(host)
 
 @app.route("/cpu")
 def cpu():
