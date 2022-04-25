@@ -110,6 +110,7 @@ resource "aws_ecr_lifecycle_policy" "repo_policy_back_prod" {
 EOF
 }
 
+
 resource "aws_ecr_repository" "app_repo_front_prod" {
   name = "epamapp-front-prod"
   image_tag_mutability = "MUTABLE"
