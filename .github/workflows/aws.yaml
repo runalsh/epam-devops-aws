@@ -211,10 +211,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Terraform format
-        run: terraform fmt -check
-        continue-on-error: true
-
       - name: Terraform init
         run: terraform init
       
@@ -265,10 +261,6 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
-
-      - name: Terraform format
-        run: terraform fmt -check
-        continue-on-error: true
 
       - name: Terraform init
         run: terraform init

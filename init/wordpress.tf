@@ -12,47 +12,6 @@ provider "aws" {
   region = var.region
 }
 
-#===== variables =================
-
-variable "region" {
-  default = "eu-central-1"
-}
-
-variable "public_subnets" {
-  default = ["10.0.0.0/24", "10.0.1.0/24"]
-}
-
-variable "key_name" {
-  type    = string
-  default = "keykeykey"
-}
-
-variable "key_name2" {
-  type    = string
-  default = "oracle"
-}
-
-variable "name" {
-  type    = string
-  default = "epam-py-cluster"
-}
-
-variable "db_name" {
-  default = "wandb"
-}
-
-variable "dbuser" {
-  default = "pypostgres"
-}
-
-variable "dbpasswd" {
-  default = "pypostgres"
-}
-
-variable "instance_type" {
-  type    = string
-  default = "t2.micro"
-}
 
 
 #========== S3 ==============
@@ -225,7 +184,7 @@ resource "aws_key_pair" "generated_key" {
 #========== perm ============
 
 resource "aws_iam_role" "eks-cluster" {
-  name               = "eks-cluster"
+  name               = var.clustername
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -410,11 +369,11 @@ resource "aws_security_group" "nodes-sg" {
 }  
 #====DB=============
 resource "aws_db_instance" "db" {
-  identifier = "db"
+  identifier = var.db_instance_name
   engine = "postgres"
   engine_version = "13.4"
   allocated_storage = 5
-  instance_class = "db.t3.micro"
+  instance_class = var.db_instance_type
   vpc_security_group_ids = [aws_security_group.db_sg.id ]
   availability_zone = "eu-central-1a" 
   db_subnet_group_name = aws_db_subnet_group.sub_db_sg.id
@@ -488,7 +447,7 @@ resource "aws_security_group" "db_sg" {
 }
 
 resource "aws_cloudwatch_log_group" "eks-logs" {
-  name              = "/aws/eks/epam-py-cluster/"
+  name              = "/aws/eks/cluster/"
   retention_in_days = 1
 }
 
@@ -496,67 +455,67 @@ resource "aws_cloudwatch_log_group" "eks-logs" {
 
 ##=============================EKS
 
-# resource "aws_eks_cluster" "eks_cluster" {
-#   name     = var.name
-#   role_arn = aws_iam_role.eks-cluster.arn
-#   version    = "1.22"
-#   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+resource "aws_eks_cluster" "eks_cluster" {
+  name     = var.clustername
+  role_arn = aws_iam_role.eks-cluster.arn
+  version    = "1.22"
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-#   vpc_config {
-#     # endpoint_private_access = true
-#     # endpoint_public_access  = true
-#     security_group_ids = [aws_security_group.cluster_sg.id]
-#     subnet_ids = aws_subnet.subnets[*].id
-#   }
-#   depends_on = [
-#      aws_iam_role_policy_attachment.eks-cluster-policy,
-#      aws_iam_role_policy_attachment.eks-vpc-policy,
-#      aws_cloudwatch_log_group.eks-logs
-#   ]
-# }
+  vpc_config {
+    # endpoint_private_access = true
+    # endpoint_public_access  = true
+    security_group_ids = [aws_security_group.cluster_sg.id]
+    subnet_ids = aws_subnet.subnets[*].id
+  }
+  depends_on = [
+     aws_iam_role_policy_attachment.eks-cluster-policy,
+     aws_iam_role_policy_attachment.eks-vpc-policy,
+     aws_cloudwatch_log_group.eks-logs
+  ]
+}
 
-# resource "aws_eks_node_group" "nodes" {
-#   cluster_name    = aws_eks_cluster.eks_cluster.name
-#   node_group_name = "nodes"
-#   node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
-#   subnet_ids      = aws_subnet.subnets[*].id
-#   scaling_config {
-#     desired_size = 1
-#     max_size     = 2
-#     min_size     = 1
-#   }
+resource "aws_eks_node_group" "nodes" {
+  cluster_name    = aws_eks_cluster.eks_cluster.name
+  node_group_name = "nodes"
+  node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
+  subnet_ids      = aws_subnet.subnets[*].id
+  scaling_config {
+    desired_size = 2
+    max_size     = var.maxnumberofnodes
+    min_size     = var.minnumberofnodes
+  }
 
-# #    remote_access {
-# #      ec2_ssh_key = var.key_name2
-# #     source_security_group_ids = [aws_security_group.sg_main.id]
-# #    }
+#    remote_access {
+#      ec2_ssh_key = var.key_name2
+#     source_security_group_ids = [aws_security_group.sg_main.id]
+#    }
 
-#   disk_size            = 8
-#   # capacity_type        = "ON_DEMAND"
-#   capacity_type        = "SPOT"
-#   force_update_version = false
-#   instance_types       = ["t3.small"]
-#   ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
-#   labels               = {
-#     role = "nodes"
-#   }
+  disk_size            = 8
+  # capacity_type        = "ON_DEMAND"
+  capacity_type        = "SPOT"
+  force_update_version = false
+  instance_types       = [var.clusternode_type]
+  ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
+  labels               = {
+    role = "nodes"
+  }
 
-#   depends_on = [
-#     aws_iam_role_policy_attachment.eks-worker-node-policy,
-#     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
-#     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
-#     aws_iam_role_policy_attachment.cloudwatch-logs-full-access
-#   ]
-# }
+  depends_on = [
+    aws_iam_role_policy_attachment.eks-worker-node-policy,
+    aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
+    aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
+    aws_iam_role_policy_attachment.cloudwatch-logs-full-access
+  ]
+}
 
-# provider "kubernetes" {
-#   host                   = data.aws_eks_cluster.eks_cluster.endpoint
-#   token                  = data.aws_eks_cluster_auth.eks_cluster.token
-#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
-# }
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.eks_cluster.endpoint
+  token                  = data.aws_eks_cluster_auth.eks_cluster.token
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
+}
 
 
-# #=========  not scale ======================
+# #=========  not scale - for testing ======================
 # resource "aws_instance" "wp_instance" {
 # ami                     = "ami-0ca64d1b4e674f837"
 # instance_type           = "t2.micro"

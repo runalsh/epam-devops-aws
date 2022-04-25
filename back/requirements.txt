@@ -3,5 +3,3 @@ psycopg2-binary
 requests
 python-dotenv
 psutil
-prometheus-flask-exporter
-pystress

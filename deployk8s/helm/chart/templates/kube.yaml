@@ -49,13 +49,13 @@ spec:
             scheme: HTTP
           initialDelaySeconds: 30
           timeoutSeconds: 5
-        # resources:
-          # limits: 
-            # memory: 64Mi
-            # cpu: "250m"
-          # requests:
-            # memory: 32Mi
-            # cpu: "200m"
+        resources:
+          limits: 
+            memory: 64Mi
+            cpu: "250m"
+          requests:
+            memory: 32Mi
+            cpu: "200m"
         ports:
         - containerPort: 8080
 ---
@@ -93,13 +93,13 @@ spec:
             scheme: HTTP
           initialDelaySeconds: 30
           timeoutSeconds: 5
-        # resources:
-          # limits: 
-            # memory: 64Mi
-            # cpu: "250m"
-          # requests:
-            # memory: 32Mi
-            # cpu: "200m"
+        resources:
+          limits: 
+            memory: 64Mi
+            cpu: "250m"
+          requests:
+            memory: 32Mi
+            cpu: "200m"
         ports:
         - containerPort: 80
 
