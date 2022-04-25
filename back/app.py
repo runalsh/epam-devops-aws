@@ -18,11 +18,10 @@ from flask import Flask,request,render_template
 import datetime
 from psutil import getloadavg
 # from psutil import cpu_percent,getloadavg
-from prometheus_flask_exporter import PrometheusMetrics
+# from prometheus_flask_exporter import PrometheusMetrics
 
 
 
-STRESSTIME=30
 host=getenv('HOSTNAME')
         
 load_dotenv()
@@ -153,15 +152,20 @@ def showmeallweather():
     allweather()
     return "index html from host %host ready at"+current_time
 
-@app.route('/stress/<int:seconds>')
-def stresssec(seconds):
-    pystress(seconds, 1)
-    return Response('shake me %host')
+# @app.route('/stress/<int:seconds>')
+# def stresssec(seconds):
+#     pystress(seconds, 1)
+#     return Response('shake me %host')
 
-@app.route("/stress")
-def stress():
-    cpustress(STRESSTIME)
+@app.route("/stress20")
+def stress20():
+    cpustress(20)
     return "Host %host: %s %ss stress.\n" % (host, STRESSTIME)
+
+@app.route("/stress10")
+def stress10():
+    cpustress(10)
+    return "Host %host: %s %ss stress.\n" % (host, STRESSTIME)    
 
 @app.route("/cpu")
 def cpu():

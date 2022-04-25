@@ -435,13 +435,13 @@ jobs:
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster"
         kubectl config current-context
-    - name: Install/upgrade helm chart
-      env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      run:
-        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml
-    # --set container.image=${{ steps.login-ecr.outputs.registry }} \
+    # - name: Install/upgrade helm chart
+    #   env:
+    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    #   run:
+    #     helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml
+    # # --set container.image=${{ steps.login-ecr.outputs.registry }} \
     - name: Install/upgrade helm chart (NEW)
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
@@ -468,115 +468,115 @@ jobs:
         disable_web_page_preview: true
 
 
-  # dashboard:
-  #   needs: deploytokube
-  #   env:
-  #     ACTION: Deploy dashboatd and metrics
-  #   name: Deploy dashboatd and metrics
-  #   defaults:
-  #     run:
-  #       working-directory: deployk8s
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v2
-  #   - name: Configure AWS credentials
-  #     uses: aws-actions/configure-aws-credentials@v1
-  #     with:
-  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-  #   - name: Login to Amazon ECR
-  #     id: login-ecr
-  #     uses: aws-actions/amazon-ecr-login@v1  
-  #   - name: Update creditials for kuber
-  #     run: |
-  #       aws eks update-kubeconfig --name "epam-py-cluster"
-  #   - name: Configure Kubeconfig
-  #     id: kube_config_data
-  #     run: |
-  #       echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
-  #   - name: Get admin permissions
-  #     env:
-  #       KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-  #       ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-  #     run: |
-  #       kubectl apply -f admin.yaml
-  #   - name: Setting up dashboard 
-  #     run: |
-  #       kubectl apply -f dashboard.yaml
-  #   ## kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
-  #   ## kubectl proxy
-  #   ## dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
-  #   - name: Setting up metrics
-  #     run: |
-  #       kubectl apply -f metrics-server.yaml   
+  dashboard:
+    needs: deploytokube
+    env:
+      ACTION: Deploy dashboatd and metrics
+    name: Deploy dashboatd and metrics
+    defaults:
+      run:
+        working-directory: deployk8s
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1  
+    - name: Update creditials for kuber
+      run: |
+        aws eks update-kubeconfig --name "epam-py-cluster"
+    - name: Configure Kubeconfig
+      id: kube_config_data
+      run: |
+        echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    - name: Get admin permissions
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        kubectl apply -f admin.yaml
+    - name: Setting up dashboard 
+      run: |
+        kubectl apply -f dashboard.yaml
+    ## kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
+    ## kubectl proxy
+    ## dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
+    - name: Setting up metrics
+      run: |
+        kubectl apply -f metrics-server.yaml   
 
-  #   - name: send message to tg
-  #     if: ${{ failure() }}
-  #     uses: appleboy/telegram-action@master
-  #     with:
-  #       to: ${{ secrets.TELEGRAM_TO }}
-  #       token: ${{ secrets.TELEGRAM_TOKEN }}
-  #       message: |
-  #         ${{ github.actor }} created commit:
-  #         *Commit message:* ${{ github.event.commits[0].message }}
-  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-  #         *Action:* ${{ env.ACTION }}
-  #         *Status:* ${{ job.status }}
-  #       format: "markdown"
-  #       disable_web_page_preview: true
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
 
-  # monitoring:
-  #   needs: dashboard
-  #   env:
-  #     ACTION: Deploy cloudwatch monitoring with fluentd and store logs
-  #   name: Deploy cloudwatch monitoring with fluentd and store logs
-  #   defaults:
-  #     run:
-  #       working-directory: deployk8s
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v2
-  #   - name: Configure AWS credentials
-  #     uses: aws-actions/configure-aws-credentials@v1
-  #     with:
-  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-  #   - name: Login to Amazon ECR
-  #     id: login-ecr
-  #     uses: aws-actions/amazon-ecr-login@v1  
-  #   - name: Update creditials for kuber
-  #     run: |
-  #       aws eks update-kubeconfig --name "epam-py-cluster"
-  #   - name: Configure Kubeconfig
-  #     id: kube_config_data
-  #     run: echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
-  #   - name: apply cloudwatch with fluentd
-  #     env:
-  #       KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-  #       ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}    
-  #     run: |
-  #       kubectl apply -f cloudwatch
+  monitoring:
+    needs: dashboard
+    env:
+      ACTION: Deploy cloudwatch monitoring with fluentd and store logs
+    name: Deploy cloudwatch monitoring with fluentd and store logs
+    defaults:
+      run:
+        working-directory: deployk8s
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1  
+    - name: Update creditials for kuber
+      run: |
+        aws eks update-kubeconfig --name "epam-py-cluster"
+    - name: Configure Kubeconfig
+      id: kube_config_data
+      run: echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    - name: apply cloudwatch with fluentd
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}    
+      run: |
+        kubectl apply -f cloudwatch
 
-  #   - name: send message to tg
-  #     if: ${{ failure() }}
-  #     uses: appleboy/telegram-action@master
-  #     with:
-  #       to: ${{ secrets.TELEGRAM_TO }}
-  #       token: ${{ secrets.TELEGRAM_TOKEN }}
-  #       message: |
-  #         ${{ github.actor }} created commit:
-  #         *Commit message:* ${{ github.event.commits[0].message }}
-  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-  #         *Action:* ${{ env.ACTION }}
-  #         *Status:* ${{ job.status }}
-  #       format: "markdown"
-  #       disable_web_page_preview: true
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
 
 
 
