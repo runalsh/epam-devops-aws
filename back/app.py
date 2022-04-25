@@ -68,6 +68,13 @@ def storedata():
     # connection.commit()
     connection.close()
 
+def stress_test():
+    prew = cur = 1
+    element = 1750000
+
+    for _ in range(int(element-2)):
+        prew, cur = cur, prew +     
+
 def tablewipe():
     connection = psycopg2.connect(**db)
     connection.autocommit = True
@@ -164,7 +171,13 @@ def stress20():
 @app.route("/stress10")
 def stress10():
     cpustress(10)
-    return "Host %host: %s %ss stress.\n" % (host, STRESSTIME)    
+    return "Host %host: %s %ss stress.\n" % (host, STRESSTIME)   
+     
+@app.route('/stress')
+def stress():
+    timestamp = datetime.today().replace(microsecond=0)
+    stress_test()
+    return "Host %host: stressed.\n" % (host)
 
 @app.route("/cpu")
 def cpu():
