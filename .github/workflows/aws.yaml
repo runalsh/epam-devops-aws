@@ -427,6 +427,7 @@ jobs:
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster"
         kubectl config current-context
+
     # - name: Install/upgrade helm chart
     #   env:
     #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
@@ -434,6 +435,7 @@ jobs:
     #   run:
     #     helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml
     # # --set container.image=${{ steps.login-ecr.outputs.registry }} \
+    
     - name: Install/upgrade helm chart (NEW)
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
