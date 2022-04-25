@@ -322,7 +322,7 @@ jobs:
       env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: epamapp-back
-          IMAGE_TAG: back-${{ github.sha }}
+          IMAGE_TAG: ${{ github.sha }}
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
@@ -370,7 +370,7 @@ jobs:
       env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: epamapp-front
-          IMAGE_TAG: front-${{ github.sha }}
+          IMAGE_TAG: ${{ github.sha }}
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
@@ -440,10 +440,11 @@ jobs:
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
         echo $dbhostdescribe
-        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe
+        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
     - name: Show our app resources in ${GITHUB_REF_NAME} namespace
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}

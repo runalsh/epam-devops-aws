@@ -29,7 +29,7 @@ spec:
       # terminationGracePeriodSeconds: 60
       containers:
       - name: {{ .Values.container.name }}-back-{{ .Values.namespace }}
-        image: {{ .Values.ecrname }}/{{ .Values.container.name }}-back-{{ .Values.namespace }}
+        image: {{ .Values.ecrname }}/{{ .Values.container.name }}-back-{{ .Values.namespace }}:{{ .Values.imagetag }}
         imagePullPolicy: Always
         env:
         - name: DB_HOST
@@ -84,7 +84,7 @@ spec:
       # terminationGracePeriodSeconds: 60
       containers:
       - name: {{ .Values.container.name }}-front-{{ .Values.namespace }}
-        image: {{ .Values.ecrname }}/{{ .Values.container.name }}-front-{{ .Values.namespace }}
+        image: {{ .Values.ecrname }}/{{ .Values.container.name }}-front-{{ .Values.namespace }}:{{ .Values.imagetag }}
         imagePullPolicy: Always
         livenessProbe:
           httpGet:

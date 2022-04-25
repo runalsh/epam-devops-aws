@@ -10,3 +10,5 @@ dbport: 5432
 dbpassword: pypostgres
 dbuser: pypostgres
 dbname: wandb
+## imagetag is not using here. get values from githubaction
+imagetag: latest
