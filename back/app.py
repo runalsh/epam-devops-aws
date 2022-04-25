@@ -23,7 +23,7 @@ from psutil import getloadavg
 
 
 host=getenv('HOSTNAME')
-        
+STRESSTIME=30
 load_dotenv()
 
 currtime = datetime.datetime.now()
@@ -70,7 +70,7 @@ def storedata():
 
 def stress_test():
     prew = cur = 1
-    element = 1750000
+    element = 1500000
 
     for _ in range(int(element-2)):
         prew, cur = cur, prew +     
@@ -163,21 +163,16 @@ def showmeallweather():
 #     pystress(seconds, 1)
 #     return Response('shake me %host')
 
-@app.route("/stress20")
-def stress20():
-    cpustress(20)
-    return "Host %host: %s %ss stress.\n" % (host, STRESSTIME)
-
-@app.route("/stress10")
-def stress10():
-    cpustress(10)
-    return "Host %host: %s %ss stress.\n" % (host, STRESSTIME)   
+@app.route("/stress30")
+def stress30():
+    cpustress(STRESSTIME)
+    return "Host %s stressed for 30 sec.\n" % (host) 
      
 @app.route('/stress')
 def stress():
     timestamp = datetime.today().replace(microsecond=0)
     stress_test()
-    return "Host %host: %s stressed in %ss.\n" % (host,timestamp)
+    return "Host %s stressed.\n" % (host)
 
 @app.route("/cpu")
 def cpu():
