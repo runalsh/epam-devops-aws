@@ -100,7 +100,7 @@ def homepage():
 @app.route('/showmeweather')
 def showmeweather():
     date = request.args.get('date')
-    response = requests.get(backapp + "/showmeweather?date=" + date)
+    response = requests.get(backapp + "/back/showmeweather?date=" + date)
     rows = response.json()
     # print (answer)
     # data = '''

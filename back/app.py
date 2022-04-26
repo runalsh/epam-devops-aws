@@ -155,7 +155,7 @@ def cleandata():
 #     return "shake me at %s" %(host)
 
 @app.route("/back/stress")
-def stress30():
+def stress():
     cpustress(STRESSTIME)
     answer = "Host %s stressed for 30 sec.\n" %(host)
     return jsonify(answer)
@@ -166,7 +166,7 @@ def cpu():
     answer = "Host: %s, CPU load: %s\n" %(host, out)
     return jsonify(answer)
     
-@app.route('/showmeweather')
+@app.route('/back/showmeweather')
 def showmeweather():
     date = request.args.get('date')
     # print(date)
