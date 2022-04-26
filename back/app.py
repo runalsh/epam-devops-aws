@@ -12,13 +12,13 @@ import requests
 # import logging
 from time import time 
 # from psycopg2 import Error
-from flask import Flask,request,render_template
+from flask import Flask,request,render_template,jsonify
 import datetime
+import psutil
 from psutil import getloadavg
+
 # from psutil import cpu_percent,getloadavg
 # from prometheus_flask_exporter import PrometheusMetrics
-
-
 
 host=getenv('HOSTNAME')
 STRESSTIME=30
@@ -26,7 +26,6 @@ load_dotenv()
 
 currtime = datetime.datetime.now()
 current_time = currtime.strftime("%H:%M:%S")
-
 
 # вариант под docker compose
 # db= {"user": "pypostgres","password": "pypostgres","host": "postgres","port": "5432","database": "wandb"}
@@ -79,38 +78,37 @@ def tablewipe():
     # connection.commit()
     connection.close()
     
-def allweather():
-    connection = psycopg2.connect(**db)
-    cursor = connection.cursor()
-    getalldata = '''
-        SELECT * FROM weather ORDER BY created;
-        '''
-    cursor.execute(getalldata)
+# def allweather():
+#     connection = psycopg2.connect(**db)
+#     cursor = connection.cursor()
+#     getalldata = '''
+#         SELECT * FROM weather ORDER BY created;
+#         '''
+#     cursor.execute(getalldata)
 
-    record = cursor.fetchall()
-    columns = cursor.description
-    rows = '<tr>'
-    for row1 in columns:
-       rows += f'<td>{row1[0]}</td>'
-    rows += '</tr>'
+#     record = cursor.fetchall()
+#     columns = cursor.description
+#     rows = '<tr>'
+#     for row1 in columns:
+#        rows += f'<td>{row1[0]}</td>'
+#     rows += '</tr>'
 
-    for row in record:
-      rows += f"<tr>"
-      for col in row:
-        rows += f"<td>{col}</td>"
-      rows += f"</tr>"
-    data = '''
-    <html>
-    <style> table,  td {border:1px solid black; }td</style><body><table>%s</table></body></html>'''%(rows)
-    with open("index.html", "w") as file:
-        file.write(data)
-    file.close()
-    # print(data)
-    cursor.close()
-    # connection.commit()
-    connection.close()
-    
-# убрал к херам, мб понадобится для дебага
+#     for row in record:
+#       rows += f"<tr>"
+#       for col in row:
+#         rows += f"<td>{col}</td>"
+#       rows += f"</tr>"
+#     data = '''
+#     <html>
+#     <style> table,  td {border:1px solid black; }td</style><body><table>%s</table></body></html>'''%(rows)
+#     with open("index.html", "w") as file:
+#         file.write(data)
+#     file.close()
+#     # print(data)
+#     cursor.close()
+#     # connection.commit()
+#     connection.close()
+#### убрал к херам, мб понадобится для дебага
 
 def cpustress(seconds):
     assert type(seconds) == type(1) and seconds < 120
@@ -129,43 +127,44 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 # metrics = PrometheusMetrics(app)
 
-@app.route('/ping')
+@app.route('/back/ping')
 def ping():
-    return "PONG! %s im alive!" %(host)
+    answer = "PONG! %s im alive!" %(host)
+    return jsonify(answer)
     
-@app.route('/getdata')
+@app.route('/back/getdata')
 def getdata():
     storedata()
-    return "update completed at "+current_time
+    answer = "update completed at "+current_time
+    return jsonify(answer)
 
-@app.route('/cleandata')
+@app.route('/back/cleandata')
 def cleandata():
     tablewipe()
-    return "table wiping completed at "+current_time
+    answer = "table wiping completed at "+current_time
+    return jsonify(answer)
 
-@app.route('/showmeallweather')
-def showmeallweather():
-    allweather()
-    return "index html from host %host ready at"+current_time
+# @app.route('/showmeallweather')
+# def showmeallweather():
+#     allweather()
+#     return "index html from host %host ready at"+current_time
 
 # @app.route('/stress/<int:seconds>')
 # def stresssec(seconds):
 #     pystress(seconds, 1)
 #     return "shake me at %s" %(host)
 
-@app.route("/stress")
+@app.route("/back/stress")
 def stress30():
     cpustress(STRESSTIME)
-    return "Host %s stressed for 30 sec.\n" %(host)
+    answer = "Host %s stressed for 30 sec.\n" %(host)
+    return jsonify(answer)
 
-@app.route("/cpu")
+@app.route("/back/cpu")
 def cpu():
     out=getloadavg()[0]
-    return "Host: %s, CPU load: %s\n" %(host, out)
-
-@app.route('/')    
-def homepage():
-    return render_template('fill.html')
+    answer = "Host: %s, CPU load: %s\n" %(host, out)
+    return jsonify(answer)
     
 @app.route('/showmeweather')
 def showmeweather():
@@ -192,14 +191,11 @@ def showmeweather():
       for col in row:
         rows += f"<td>{col}</td>"
       rows += f"</tr>"
-    data = '''
-    <html> <style> table,  td {border:1px solid black; }td</style><body><table>%s</table></body></html>'''%(rows)
-    # print(data)
+    # print(rows)
     cursor.close()
     # connection.commit()
     connection.close()
-    # return "indexhtml ready at"+current_time
-    return render_template('shooooooooooooow.html', text=data)
+    return jsonify(rows)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
