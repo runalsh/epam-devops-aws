@@ -392,7 +392,7 @@ resource "aws_security_group" "db_sg" {
 }
 
 resource "aws_cloudwatch_log_group" "eks-logs" {
-  name              = "/aws/eks/cluster/"
+  name              = "/aws/eks/${var.clustername}/"
   retention_in_days = 1
 }
 
