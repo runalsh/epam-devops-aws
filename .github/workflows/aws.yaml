@@ -63,7 +63,6 @@ jobs:
  
   bandit:
     runs-on: ubuntu-latest
-    needs: pytest
     defaults:
       run:
         working-directory: back
@@ -101,7 +100,6 @@ jobs:
         disable_web_page_preview: true
     
   sonarcloud:
-    needs: pytest
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -134,7 +132,6 @@ jobs:
 
 
   pylint:
-    needs: pytest
     runs-on: ubuntu-latest
     defaults:
       run:
