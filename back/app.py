@@ -131,7 +131,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 @app.route('/ping')
 def ping():
-    return "PONG! %s im SNAKE and im alive!" %(host)
+    return "PONG! %s im alive!" %(host)
     
 @app.route('/getdata')
 def getdata():
