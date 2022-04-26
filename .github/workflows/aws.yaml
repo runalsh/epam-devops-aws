@@ -34,8 +34,7 @@ jobs:
     - name: Test with pytest front app
       working-directory: ./front
       run: |
-        pytest    
-    
+        pytest
     - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
@@ -85,7 +84,7 @@ jobs:
     - name: analyze source code with bandit front app
       run: |
         bandit -c ./front/bandit.yml -s B104,B608,B201,B101 -r ./front  
-        
+
     - name: send message to tg
       if: ${{ failure() }}
       uses: appleboy/telegram-action@master
