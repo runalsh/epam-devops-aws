@@ -19,7 +19,6 @@ from psutil import getloadavg
 # from prometheus_flask_exporter import PrometheusMetrics
 
 host=getenv('HOSTNAME')
-STRESSTIME=10
 load_dotenv()
 
 currtime = datetime.datetime.now()
@@ -38,6 +37,7 @@ def cpustress(seconds):
             a+=1
         if (time() - start) > seconds:
             break
+
 
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -68,15 +68,15 @@ def cleandata():
 #     allweather()
 #     return "index html from host %host ready at"+current_time
 
-# @app.route('/stress/<int:seconds>')
-# def stresssec(seconds):
-#     pystress(seconds, 1)
-#     return "shake me at %s" %(host)
+@app.route("/stresstime/<int:seconds>")
+def stresstime(seconds):
+    cpustress(seconds)
+    return "Host %s stressed for %s sec.\n" %(host,seconds)
 
 @app.route("/stress")
 def stress():
-    cpustress(STRESSTIME)
-    return "Host %s stressed for 30 sec.\n" %(host)
+    cpustress(10)
+    return "Host %s stressed for 10 sec.\n" %(host)    
 
 @app.route("/stressback")
 def stressback():
