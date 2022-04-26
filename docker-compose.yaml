@@ -33,7 +33,7 @@ services:
       
      
   epamapp-front:
-    build: ./frontnew/
+    build: ./front/
     image: runalsh/epamapp-front:latest
     ports:
       - "80:80"
@@ -46,7 +46,7 @@ services:
   
   
   epamapp-back:
-    build: ./backnew/
+    build: ./back/
     image: runalsh/epamapp-back:latest
     ports:
       - "8080:8080"

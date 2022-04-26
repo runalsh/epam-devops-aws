@@ -60,7 +60,6 @@ def getdata():
 
 @app.route('/cleandata')
 def cleandata():
-    tablewipe()
     response = requests.get(backapp + "/back/cleandata")
     return response.json()
 
