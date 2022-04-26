@@ -1,6 +1,6 @@
 # Cloud CI\CD using AWS!
 
-[Build Statuse](https://github.com/runalsh/epam_again_aws/actions/workflows/aws.yml/badge.svg)
+[Build Statuse](https://github.com/runalsh/epam_again_aws/actions/workflows/aws.yaml/badge.svg)
 
 Simple Python app.
 
