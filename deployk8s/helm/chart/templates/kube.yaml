@@ -48,7 +48,7 @@ spec:
             port: 8080
             scheme: HTTP
           initialDelaySeconds: 30
-          timeoutSeconds: 5
+          timeoutSeconds: 15
         resources:
           limits: 
             memory: 64Mi
@@ -92,7 +92,7 @@ spec:
             port: 80
             scheme: HTTP
           initialDelaySeconds: 30
-          timeoutSeconds: 5
+          timeoutSeconds: 15
         resources:
           limits: 
             memory: 64Mi

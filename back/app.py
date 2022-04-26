@@ -21,7 +21,7 @@ from psutil import getloadavg
 # from prometheus_flask_exporter import PrometheusMetrics
 
 host=getenv('HOSTNAME')
-STRESSTIME=30
+STRESSTIME=10
 load_dotenv()
 
 currtime = datetime.datetime.now()
