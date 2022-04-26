@@ -25,7 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements.txt ]; then pip install -r ./back/requirements.txt && pip install -r ./front/requirements.txt; fi
     - name: Test with pytest back app
       working-directory: ./back
       run: |
@@ -81,11 +81,11 @@ jobs:
     - name: analyze source code with bandit back app
       working-directory: ./back
       run: |
-        bandit -c bandit.yml -s B104,B608,B201,B101 -r .
+        bandit -c ./back/bandit.yml -s B104,B608,B201,B101 -r .
     - name: analyze source code with bandit front app
       working-directory: ./front
       run: |
-        bandit -c bandit.yml -s B104,B608,B201,B101 -r .    
+        bandit -c ./front/bandit.yml -s B104,B608,B201,B101 -r .    
     
     - name: send message to tg
       if: ${{ failure() }}
