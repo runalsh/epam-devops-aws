@@ -2,7 +2,28 @@
 
 [Build Statuse](https://github.com/runalsh/epam_again_aws/actions/workflows/aws.yaml/badge.svg)
 
-Simple Python app.
+Simple Python app to get data from https://www.metaweather.com/api with storing to AWS RDS/
+
+Cloud - Amazon Web Service (and Google Cloud in another repo but its not completed)
+
+Backend, frontend apps - Python , Flask, REST API
+
+IAC - Terraform
+
+Orchestration - Kubernetes
+
+Logging -  AWS CloudWatch
+
+Monitoring -  AWS CloudWatch Dashboard
+
+Runtime/Deployment - Ci/Cd Github Action
+
+Scalability/redundancy - Kubernetes HPA
+
+Tests - Pylint, Sonarcube, Pytest, Bandit
+
+Alert - AWS SNS 
+
 
 Before start you must declare some SECRETS to GA Store:
 
@@ -26,7 +47,9 @@ TELEGRAM_TO
 
 TELEGRAM_TOKEN
 
-You will be informed about FAILs in worflow
+You will be informed about FAILs in workflow
+
+
 
 # TASK
 
