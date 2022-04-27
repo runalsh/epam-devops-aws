@@ -25,6 +25,7 @@ Tests - Pylint, Sonarcube, Pytest, Bandit
 Alert - AWS SNS 
 
 
+
 Before start you must declare some SECRETS to GA Store:
 
 __Core__
