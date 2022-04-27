@@ -313,6 +313,7 @@ resource "aws_security_group" "nodes-sg" {
   }
 }  
 #====DB=============
+
 resource "aws_db_instance" "db" {
   identifier = var.db_instance_name
   engine = "postgres"
@@ -333,7 +334,7 @@ resource "aws_db_instance" "db" {
   }
 }
 
-#========RDS==============================
+###========RDS==============================
 
 resource "random_string" "rds_password" {
   length           = 15
@@ -355,7 +356,8 @@ data "aws_ssm_parameter" "rds-pass" {
   depends_on = [aws_ssm_parameter.rds_password]
 }
 
-#==========DB sg========================
+###==========DB sg========================
+
 resource "aws_security_group" "db_sg" {
   name   = "db_sg"
   vpc_id = aws_vpc.vpc_main.id
@@ -391,11 +393,43 @@ resource "aws_security_group" "db_sg" {
   ]
 }
 
+### =======================c  cloudwatch
+
 resource "aws_cloudwatch_log_group" "eks-logs" {
   name              = "/aws/eks/${var.clustername}/"
-  retention_in_days = 1
+  retention_in_days = 2
 }
 
+resource "aws_cloudwatch_log_stream" "eks-logs-stream" {
+ name           = "${var.clustername}-logs-stream"
+ log_group_name = "${aws_cloudwatch_log_group.eks-logs.name}"
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+  alarm_name          = "cpu_utilization_high"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "default"
+  period              = "30"
+  statistic           = "Average"
+  threshold           = "80"
+
+  dimensions = {
+    ClusterName = "${aws_eks_cluster.eks_cluster.name}"
+  }
+
+  alarm_actions = ["${aws_sns_topic.alarm.arn}"]
+}
+
+resource "aws_sns_topic" "alarm" {
+  name            = "alarms"
+  delivery_policy = 
+
+  provisioner "local-exec" {
+    command = "aws sns subscribe --topic-arn ${self.arn} --protocol email --notification-endpoint ${var.alarms_email}"
+  }
+}
 
 
 ##=============================EKS
@@ -425,7 +459,7 @@ resource "aws_cloudwatch_log_group" "eks-logs" {
 #   node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
 #   subnet_ids      = aws_subnet.subnets[*].id
 #   scaling_config {
-#     desired_size = 2
+#     desired_size = var.desirednumberofnodes
 #     max_size     = var.maxnumberofnodes
 #     min_size     = var.minnumberofnodes
 #   }
@@ -450,6 +484,7 @@ resource "aws_cloudwatch_log_group" "eks-logs" {
 #     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
 #     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
 #     aws_iam_role_policy_attachment.cloudwatch-logs-full-access
+#     # aws_iam_role_policy_attachment.route53_modify_policy
 #   ]
 # }
 
@@ -472,6 +507,122 @@ resource "aws_cloudwatch_log_group" "eks-logs" {
 # }
 # }  
 
+##  =========================== S53
+
+data "aws_route53_zone" "selectedzone" {
+  name         = "${var.domain}."
+  private_zone = false
+}
+
+
+resource "aws_iam_role_policy_attachment" "route53_modify_policy" {
+  policy_arn = aws_iam_policy.route53_modify_policy.arn
+  role       = aws_iam_role.eks-worker-node-iam-role.name
+}
+
+resource "aws_iam_policy" "route53_modify_policy" {
+  name        = "route53_modify_policy"
+  path        = "/"
+  description = "This policy allows route53 modifications"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "route53:ChangeResourceRecordSets"
+      ],
+      "Resource": [
+        "arn:aws:route53:::hostedzone/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "route53:ListHostedZones",
+        "route53:ListResourceRecordSets"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_route53_record" "load_balancer_record" {
+  name    = "*.${var.domainname}"
+  type    = "A"
+  zone_id = "${data.aws_route53_zone.selectedzone.zone_id}"
+
+  alias {
+    evaluate_target_health  = false
+    name                    = "${aws_alb.cluster_alb.dns_name}"
+    zone_id                 = "${aws_alb.cluster_alb.zone_id}"
+  }
+}
+
+## ====================  ALB
+
+resource "aws_security_group" "alb_security_group" {
+  name        = "${var.clustername}-alb-sq"
+  vpc_id      = "${aws_vpc.vpc_main.id}"
+
+  ingress {
+    from_port   = 80
+    protocol    = "TCP"
+    to_port     = 80
+    cidr_blocks = [aws_vpc.vpc_main.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+    cidr_blocks = [aws_vpc.vpc_main.cidr_block]
+  }
+}
+
+resource "aws_alb" "cluster_alb" {
+  name            = "${var.clustername}-alb"
+  internal        = false
+  security_groups = ["${aws_security_group.alb_security_group.id}"]
+  subnets         = aws_subnet.subnets[*].id
+}
+
+resource "aws_alb_listener" "alb_listener" {
+  load_balancer_arn = "${aws_alb.cluster_alb.arn}"
+  port              = "80"
+  protocol          = "HTTP"
+  
+  "default_action" {
+    type              = "forward"
+    target_group_arn  = "${aws_alb_target_group.target_group.arn}"
+  }
+
+  depends_on = ["aws_alb_target_group.target_group"]
+}
+
+resource "aws_alb_target_group" "target_group" {
+  name        = "${var.ecs_clustername}-targetgroup"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = "${aws_vpc.vpc_main.id}"
+  target_type = "ip"
+
+  health_check {
+    healthy_threshold   = "3"
+    interval            = "30"
+    protocol            = "HTTP"
+    matcher             = "200"
+    timeout             = "3"
+    path                = "/"
+    unhealthy_threshold = "2"
+  }
+}
 
 
 

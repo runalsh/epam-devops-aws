@@ -56,3 +56,16 @@ variable "maxnumberofnodes" {
   type    = string
 }
 
+variable "desirednumberofnodes" {
+  type    = string
+}
+
+variable "domain" {
+  type    = string
+}
+
+variable "alarms_email" {
+  type    = string
+}
+
+
