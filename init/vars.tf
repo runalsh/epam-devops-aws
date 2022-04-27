@@ -68,4 +68,9 @@ variable "alarms_email" {
   type    = string
 }
 
+# variable "telegramtoken" {
+#   type      = string
+#   sensitive = true
+# }
+
 

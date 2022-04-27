@@ -397,7 +397,7 @@ resource "aws_security_group" "db_sg" {
 
 resource "aws_cloudwatch_log_group" "eks-logs" {
   name              = "/aws/eks/${var.clustername}/"
-  retention_in_days = 2
+  retention_in_days = 3
 }
 
 resource "aws_cloudwatch_log_stream" "eks-logs-stream" {
@@ -410,26 +410,73 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "2"
   metric_name         = "CPUUtilization"
-  namespace           = "default"
+  namespace           = "AWS/EC2"
   period              = "30"
   statistic           = "Average"
   threshold           = "80"
 
-  dimensions = {
-    ClusterName = "${aws_eks_cluster.eks_cluster.name}"
-  }
+  # dimensions = {
+  #   ClusterName = "${aws_eks_cluster.eks_cluster.name}"
+  # }
 
   alarm_actions = ["${aws_sns_topic.alarm.arn}"]
 }
 
 resource "aws_sns_topic" "alarm" {
   name            = "alarms"
-  delivery_policy = 
+  delivery_policy = <<EOF
+  {
+  "http": {
+    "defaultHealthyRetryPolicy": {
+      "minDelayTarget": 20,
+      "maxDelayTarget": 20,
+      "numRetries": 3,
+      "numMaxDelayRetries": 0,
+      "numNoDelayRetries": 0,
+      "numMinDelayRetries": 0,
+      "backoffFunction": "linear"
+    },
+    "disableSubscriptionOverrides": false,
+    "defaultThrottlePolicy": {
+      "maxReceivesPerSecond": 1
+      }
+    }
+  }
+  EOF
 
   provisioner "local-exec" {
     command = "aws sns subscribe --topic-arn ${self.arn} --protocol email --notification-endpoint ${var.alarms_email}"
   }
 }
+
+
+#command = "curl https://api.telegram.org/bot${local.TOKEN}/sendMessage?text="ALARMALARMALARM"&chat_id=${local.ID}
+
+
+# data "aws_secretsmanager_secret" "telegram" {
+#   name = "telegramtokenid"
+# }
+# data "aws_secretsmanager_secret_version" "telegram" {
+#   secret_id = data.aws_secretsmanager_secret.telegram.id
+# }
+# locals {
+#   TOKEN = jsondecode(data.aws_secretsmanager_secret_version.telegram.secret_string)["TOKEN"]
+#   ID = jsondecode(data.aws_secretsmanager_secret_version.telegram.secret_string)["ID"]      
+# }
+
+
+  # environment = {
+  #     TOKEN = var.telegramtoken
+  #   }
+# - name: Setup Terraform variables
+#             working-directory: 
+#             id: vars
+#             run: |
+#               export telegramtoken = "${{ secrets.TELEGRAMTOKEN }}"
+
+
+
+
 
 
 ##=============================EKS
@@ -509,6 +556,10 @@ resource "aws_sns_topic" "alarm" {
 
 ##  =========================== S53
 
+resource "aws_route53_zone" "primary" {
+  name = "${var.domain}"
+}
+
 data "aws_route53_zone" "selectedzone" {
   name         = "${var.domain}."
   private_zone = false
@@ -554,7 +605,7 @@ EOF
 }
 
 resource "aws_route53_record" "load_balancer_record" {
-  name    = "*.${var.domainname}"
+  name    = "*.${var.domain}"
   type    = "A"
   zone_id = "${data.aws_route53_zone.selectedzone.zone_id}"
 
@@ -598,7 +649,7 @@ resource "aws_alb_listener" "alb_listener" {
   port              = "80"
   protocol          = "HTTP"
   
-  "default_action" {
+  default_action {
     type              = "forward"
     target_group_arn  = "${aws_alb_target_group.target_group.arn}"
   }
@@ -607,7 +658,7 @@ resource "aws_alb_listener" "alb_listener" {
 }
 
 resource "aws_alb_target_group" "target_group" {
-  name        = "${var.ecs_clustername}-targetgroup"
+  name        = "${var.clustername}-targetgroup"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = "${aws_vpc.vpc_main.id}"
