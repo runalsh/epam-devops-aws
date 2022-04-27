@@ -26,10 +26,10 @@ __Core__
  - SONAR_TOKEN - get from https://sonarcloud.io
 
 __Information about progress - Telegram__
-start dialog with @BotFather and create new bot. After take token below "Use this token to access the HTTP API:" its seems like "653654654:GJBkjnfuikbjkbkbgrkjgbkgbnsjkfneladk" and it will be TELEGRAM_TOKEN secret.
-Now start dialog with new bot and open in browser page https://api.telegram.org/bot<<you_token>>/getUpdates,  find chat_id seem like 56275476 and its y TELEGRAM_TO secret!
-TELEGRAM_TO
-TELEGRAM_TOKEN
+ - start dialog with @BotFather and create new bot. After take token below "Use this token to access the HTTP API:" its seems like "653654654:GJBkjnfuikbjkbkbgrkjgbkgbnsjkfneladk" and it will be TELEGRAM_TOKEN secret.
+ - Now start dialog with new bot and open in browser page https://api.telegram.org/bot<<you_token>>/getUpdates,  find chat_id seem like 56275476 and its y  -  - TELEGRAM_TO secret!
+ - TELEGRAM_TO
+ - TELEGRAM_TOKEN
 You will be informed about FAILs in workflow
 
 
