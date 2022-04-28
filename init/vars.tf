@@ -73,4 +73,6 @@ variable "alarms_email" {
 #   sensitive = true
 # }
 
-
+variable "prefix" {
+  type    = string
+}

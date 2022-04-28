@@ -2,6 +2,8 @@
 region              = "eu-central-1"
 domain  =    "a.runalsh.ru"
 alarms_email = "1@runalsh.ru"
+prefix = "runalsh"
+
 
 #custer
 clustername        = "epam-py-cluster"

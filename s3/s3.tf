@@ -23,7 +23,7 @@ variable "region" {
 #========== S3 ==============
 
 resource "aws_s3_bucket" "terraform_state" {
-   bucket = "statebucket-my"
+   bucket = "statebucket-myy"
    lifecycle {
      prevent_destroy = true
    }
@@ -31,3 +31,4 @@ resource "aws_s3_bucket" "terraform_state" {
       enabled = true
     }
  } 
+ 

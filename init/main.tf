@@ -16,20 +16,20 @@ provider "aws" {
 
 #========== S3 ==============
 
-# resource "aws_s3_bucket" "terraform_state" {
-#   bucket = "statebucket-my"
-#   lifecycle {
-#     prevent_destroy = true
-#   }
-#   # versioning {
-#   #   enabled = true
-#   # }
-# } 
+resource "aws_s3_bucket" "terraform_state" {
+   bucket = "statebucket-myy"
+   lifecycle {
+     prevent_destroy = true
+   }
+    versioning {
+      enabled = true
+    }
+ } 
 
 terraform {
   backend "s3" {
-    bucket = "statebucket-my"
-    key    = "statebucket-my/terraform.tfstate"
+    bucket = "statebucket-myy"
+    key    = "statebucket-myy/terraform.tfstate"
     region = "eu-central-1"
   }
 }
@@ -37,7 +37,7 @@ terraform {
 #====================== ECR 
 
 resource "aws_ecr_repository" "app_repo_back_prod" {
-  name = "epamapp-back-prod"
+  name = "${var.prefix}-epamapp-back-prod"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -73,7 +73,7 @@ resource "aws_ecr_lifecycle_policy" "repo_policy_back_prod" {
 
 
 resource "aws_ecr_repository" "app_repo_front_prod" {
-  name = "epamapp-front-prod"
+  name = "${var.prefix}-epamapp-front-prod"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -87,7 +87,7 @@ resource "aws_ecr_lifecycle_policy" "repo_policy_front_prod" {
 }
 
 resource "aws_ecr_repository" "app_repo_back_dev" {
-  name = "epamapp-back-dev"
+  name = "${var.prefix}-epamapp-back-dev"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -101,7 +101,7 @@ resource "aws_ecr_lifecycle_policy" "repo_policy_back_dev" {
 }
 
 resource "aws_ecr_repository" "app_repo_front_dev" {
-  name = "epamapp-front-dev"
+  name = "${var.prefix}-epamapp-front-dev"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -157,7 +157,7 @@ resource "aws_iam_role_policy_attachment" "eks-vpc-policy" {
 }
 
 resource "aws_iam_role" "eks-worker-node-iam-role" {
-  name = "cluster-worker-node"
+  name = "${var.prefix}-cluster-worker-node"
 
   assume_role_policy = <<POLICY
 {
@@ -201,10 +201,13 @@ resource "aws_iam_role_policy_attachment" "cloudwatch-logs-full-access" {
 
 resource "aws_internet_gateway" "igw_main" {
   vpc_id = aws_vpc.vpc_main.id
+  tags = {
+    name = "${var.prefix}-main-igw"
+  }
 }
 
 resource "aws_security_group" "sg_main" {
-  name   = "aws-sec-group-main"
+  name   = "${var.prefix}-aws-sec-group-main"
   vpc_id = aws_vpc.vpc_main.id
 
 
@@ -225,6 +228,9 @@ resource "aws_security_group" "sg_main" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  tags = {
+    name = "${var.prefix}-main-sec-group"
+  }
 }
 
 data "aws_availability_zones" "aviable_zones" {
@@ -237,12 +243,20 @@ resource "aws_subnet" "subnets" {
   cidr_block              = var.public_subnets[count.index]
   availability_zone       = data.aws_availability_zones.aviable_zones.names[count.index]
   map_public_ip_on_launch = "true"
+
+  tags = {
+    name = "${var.prefix}-subnets-vpcmain"
+  }
 }
 
 resource "aws_vpc" "vpc_main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
+
+  tags = {
+    name = "${var.prefix}-vpcmain"
+  }
 }
 
 resource "aws_route_table" "vpc_route" {
@@ -250,6 +264,9 @@ resource "aws_route_table" "vpc_route" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw_main.id
+  }
+  tags = {
+    name = "${var.prefix}-vpc-route"
   }
 }
 
@@ -260,12 +277,15 @@ resource "aws_route_table_association" "vpc_route_assoc" {
 }
 
 resource "aws_db_subnet_group" "sub_db_sg" {
-  name       = "subnet-db-sg"
+  name       = "${var.prefix}-subnet-db-sg"
   subnet_ids = [aws_subnet.subnets.0.id, aws_subnet.subnets.1.id]
+  tags = {
+    name = "${var.prefix}-db-subnet-group"
+  }
 }
 
 resource "aws_security_group" "cluster_sg" {
-  name   = "cluster-sg"
+  name   = "${var.prefix}-cluster-sg"
   vpc_id = aws_vpc.vpc_main.id
 
   ingress {
@@ -285,12 +305,12 @@ resource "aws_security_group" "cluster_sg" {
   }
 
   tags = {
-    Name = "cluster-sg"
+    name = "${var.prefix}-cluster-sg"
   }
 }
 
 resource "aws_security_group" "nodes-sg" {
-  name        = "nodes-sg"
+  name        = "${var.prefix}-nodes-sg"
   vpc_id      = aws_vpc.vpc_main.id
   
   # ingress {
@@ -309,7 +329,7 @@ resource "aws_security_group" "nodes-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name = "node-cluster-sg"
+    Name = "${var.prefix}-node-cluster-sg"
   }
 }  
 #====DB=============
@@ -330,7 +350,7 @@ resource "aws_db_instance" "db" {
   publicly_accessible = true
   skip_final_snapshot = true
   tags = {
-    Name = "postgresql"
+    name = "${var.prefix}-postgresql"
   }
 }
 
@@ -346,20 +366,20 @@ resource "random_string" "rds_password" {
 }
 
 resource "aws_ssm_parameter" "rds_password" {
-  name  = "rds-ssm"
+  name  = "${var.prefix}-rds-ssm"
   type  = "SecureString"
   value = random_string.rds_password.result
 }
 
 data "aws_ssm_parameter" "rds-pass" {
-  name       = "rds-ssm"
+  name       = "${var.prefix}-rds-ssm"
   depends_on = [aws_ssm_parameter.rds_password]
 }
 
 ###==========DB sg========================
 
 resource "aws_security_group" "db_sg" {
-  name   = "db_sg"
+  name   = "${var.prefix}-db_sg"
   vpc_id = aws_vpc.vpc_main.id
 
   ingress = [
@@ -391,6 +411,9 @@ resource "aws_security_group" "db_sg" {
       self             = false
     }
   ]
+  tags = {
+    name = "${var.prefix}-db-sec-group"
+  }
 }
 
 ### =======================c  cloudwatch
@@ -423,7 +446,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
 }
 
 resource "aws_sns_topic" "alarm" {
-  name            = "alarms"
+  name            = "${var.prefix}-alarms"
   delivery_policy = <<EOF
   {
   "http": {
@@ -481,24 +504,24 @@ resource "aws_sns_topic" "alarm" {
 
 ##=============================EKS
 
-# resource "aws_eks_cluster" "eks_cluster" {
-#   name     = var.clustername
-#   role_arn = aws_iam_role.eks-cluster.arn
-#   version    = "1.22"
-#   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+resource "aws_eks_cluster" "eks_cluster" {
+  name     = var.clustername
+  role_arn = aws_iam_role.eks-cluster.arn
+  version    = "1.22"
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-#   vpc_config {
-#     # endpoint_private_access = true
-#     # endpoint_public_access  = true
-#     security_group_ids = [aws_security_group.cluster_sg.id]
-#     subnet_ids = aws_subnet.subnets[*].id
-#   }
-#   depends_on = [
-#      aws_iam_role_policy_attachment.eks-cluster-policy,
-#      aws_iam_role_policy_attachment.eks-vpc-policy,
-#      aws_cloudwatch_log_group.eks-logs
-#   ]
-# }
+  vpc_config {
+    # endpoint_private_access = true
+    # endpoint_public_access  = true
+    security_group_ids = [aws_security_group.cluster_sg.id]
+    subnet_ids = aws_subnet.subnets[*].id
+  }
+  depends_on = [
+     aws_iam_role_policy_attachment.eks-cluster-policy,
+     aws_iam_role_policy_attachment.eks-vpc-policy,
+     aws_cloudwatch_log_group.eks-logs
+  ]
+}
 
 # resource "aws_eks_node_group" "nodes" {
 #   cluster_name    = aws_eks_cluster.eks_cluster.name
@@ -535,11 +558,11 @@ resource "aws_sns_topic" "alarm" {
 #   ]
 # }
 
-# provider "kubernetes" {
-#   host                   = data.aws_eks_cluster.eks_cluster.endpoint
-#   token                  = data.aws_eks_cluster_auth.eks_cluster.token
-#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
-# }
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.eks_cluster.endpoint
+  token                  = data.aws_eks_cluster_auth.eks_cluster.token
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
+}
 
 
 # #=========  not scale - for testing ======================
@@ -560,11 +583,6 @@ resource "aws_route53_zone" "primary" {
   name = "${var.domain}"
 }
 
-data "aws_route53_zone" "selectedzone" {
-  name         = "${var.domain}."
-  private_zone = false
-}
-
 
 resource "aws_iam_role_policy_attachment" "route53_modify_policy" {
   policy_arn = aws_iam_policy.route53_modify_policy.arn
@@ -572,7 +590,7 @@ resource "aws_iam_role_policy_attachment" "route53_modify_policy" {
 }
 
 resource "aws_iam_policy" "route53_modify_policy" {
-  name        = "route53_modify_policy"
+  name        = "${var.prefix}-route53_modify_policy"
   path        = "/"
   description = "This policy allows route53 modifications"
 

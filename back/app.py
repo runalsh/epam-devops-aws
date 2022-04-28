@@ -20,7 +20,6 @@ from psutil import getloadavg
 # from psutil import cpu_percent,getloadavg
 # from prometheus_flask_exporter import PrometheusMetrics
 
-
 host=getenv('HOSTNAME')
 load_dotenv()
 

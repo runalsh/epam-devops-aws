@@ -6,14 +6,13 @@ jobs:
  tfdestroy:
    runs-on: ubuntu-latest
    defaults:
-    run:
-      working-directory: init
+      run:
+        working-directory: init
    env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
    steps:
-
       - name: send message to tg
         if: always()
         uses: appleboy/telegram-action@master
