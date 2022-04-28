@@ -44,7 +44,7 @@ spec:
           value: "{{ .Values.dbport }}"
         livenessProbe:
           httpGet:
-            path: /ping
+            path: /back/ping
             port: 8080
             scheme: HTTP
           initialDelaySeconds: 30
@@ -128,35 +128,37 @@ metadata:
   labels:
     app: {{ .Values.container.name }}-front-{{ .Values.namespace }}
 spec:
+  # type: ClusterIP
   type: LoadBalancer
+  # type: NodePort
   selector:
     app: {{ .Values.container.name }}-front-{{ .Values.namespace }}
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
-    
-# # ---
-# # apiVersion: networking.k8s.io/v1
-# # kind: Ingress
-# # metadata:
-# #   namespace: {{ .Values.namespace }}
-# #   name: {{ .Values.container.name }}-front
-# #   annotations:
-# #     kubernetes.io/ingress.class: "nginx"
-# # spec:
-# #   rules:
-# #     - host: ingress-front-{{ .Values.container.name }}-{{ .Values.namespace }}.local
-# #       http:
-# #        paths:
-# #        - pathType: Prefix
-# #          path: /
-# #          backend:
-# #            service:
-# #             name: {{ .Values.container.name }}-front
-# #             port:
-# #               number: 80
-              
+
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   namespace: {{ .Values.namespace }}
+#   name: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+#   annotations:
+#     kubernetes.io/ingress.class: "nginx"
+# spec:
+#   rules:
+#     # - host: ingress-{{ .Values.container.name }}-front-{{ .Values.namespace }}.local
+#     - http:
+#        paths:
+#        - pathType: Prefix
+#          path: /
+#          backend:
+#            service:
+#             name: {{ .Values.container.name }}-front-{{ .Values.namespace }}
+#             port:
+#               number: 80        
+
 # # ---
 # # apiVersion: networking.k8s.io/v1
 # # kind: Ingress

@@ -481,65 +481,65 @@ resource "aws_sns_topic" "alarm" {
 
 ##=============================EKS
 
-resource "aws_eks_cluster" "eks_cluster" {
-  name     = var.clustername
-  role_arn = aws_iam_role.eks-cluster.arn
-  version    = "1.22"
-  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+# resource "aws_eks_cluster" "eks_cluster" {
+#   name     = var.clustername
+#   role_arn = aws_iam_role.eks-cluster.arn
+#   version    = "1.22"
+#   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-  vpc_config {
-    # endpoint_private_access = true
-    # endpoint_public_access  = true
-    security_group_ids = [aws_security_group.cluster_sg.id]
-    subnet_ids = aws_subnet.subnets[*].id
-  }
-  depends_on = [
-     aws_iam_role_policy_attachment.eks-cluster-policy,
-     aws_iam_role_policy_attachment.eks-vpc-policy,
-     aws_cloudwatch_log_group.eks-logs
-  ]
-}
+#   vpc_config {
+#     # endpoint_private_access = true
+#     # endpoint_public_access  = true
+#     security_group_ids = [aws_security_group.cluster_sg.id]
+#     subnet_ids = aws_subnet.subnets[*].id
+#   }
+#   depends_on = [
+#      aws_iam_role_policy_attachment.eks-cluster-policy,
+#      aws_iam_role_policy_attachment.eks-vpc-policy,
+#      aws_cloudwatch_log_group.eks-logs
+#   ]
+# }
 
-resource "aws_eks_node_group" "nodes" {
-  cluster_name    = aws_eks_cluster.eks_cluster.name
-  node_group_name = "nodes"
-  node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
-  subnet_ids      = aws_subnet.subnets[*].id
-  scaling_config {
-    desired_size = var.desirednumberofnodes
-    max_size     = var.maxnumberofnodes
-    min_size     = var.minnumberofnodes
-  }
+# resource "aws_eks_node_group" "nodes" {
+#   cluster_name    = aws_eks_cluster.eks_cluster.name
+#   node_group_name = "nodes"
+#   node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
+#   subnet_ids      = aws_subnet.subnets[*].id
+#   scaling_config {
+#     desired_size = var.desirednumberofnodes
+#     max_size     = var.maxnumberofnodes
+#     min_size     = var.minnumberofnodes
+#   }
 
-#    remote_access {
-#      ec2_ssh_key = var.key_name2
-#     source_security_group_ids = [aws_security_group.sg_main.id]
-#    }
+# #    remote_access {
+# #      ec2_ssh_key = var.key_name2
+# #     source_security_group_ids = [aws_security_group.sg_main.id]
+# #    }
 
-  disk_size            = 8
-  # capacity_type        = "ON_DEMAND"
-  capacity_type        = "SPOT"
-  force_update_version = false
-  instance_types       = [var.clusternode_type]
-  ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
-  labels               = {
-    role = "nodes"
-  }
+#   disk_size            = 8
+#   # capacity_type        = "ON_DEMAND"
+#   capacity_type        = "SPOT"
+#   force_update_version = false
+#   instance_types       = [var.clusternode_type]
+#   ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
+#   labels               = {
+#     role = "nodes"
+#   }
 
-  depends_on = [
-    aws_iam_role_policy_attachment.eks-worker-node-policy,
-    aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
-    aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
-    aws_iam_role_policy_attachment.cloudwatch-logs-full-access
-    # aws_iam_role_policy_attachment.route53_modify_policy
-  ]
-}
+#   depends_on = [
+#     aws_iam_role_policy_attachment.eks-worker-node-policy,
+#     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
+#     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
+#     aws_iam_role_policy_attachment.cloudwatch-logs-full-access,
+#     aws_iam_role_policy_attachment.route53_modify_policy
+#   ]
+# }
 
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.eks_cluster.endpoint
-  token                  = data.aws_eks_cluster_auth.eks_cluster.token
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
-}
+# provider "kubernetes" {
+#   host                   = data.aws_eks_cluster.eks_cluster.endpoint
+#   token                  = data.aws_eks_cluster_auth.eks_cluster.token
+#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
+# }
 
 
 # #=========  not scale - for testing ======================
@@ -604,76 +604,76 @@ resource "aws_iam_policy" "route53_modify_policy" {
 EOF
 }
 
-resource "aws_route53_record" "load_balancer_record" {
-  name    = "*.${var.domain}"
-  type    = "A"
-  zone_id = "${data.aws_route53_zone.selectedzone.zone_id}"
+# resource "aws_route53_record" "load_balancer_record" {
+#   name    = "alb.${var.domain}"
+#   type    = "A"
+#   zone_id = "${data.aws_route53_zone.selectedzone.zone_id}"
 
-  alias {
-    evaluate_target_health  = false
-    name                    = "${aws_alb.cluster_alb.dns_name}"
-    zone_id                 = "${aws_alb.cluster_alb.zone_id}"
-  }
-}
+#   alias {
+#     evaluate_target_health  = false
+#     name                    = "${aws_alb.cluster_alb.dns_name}"
+#     zone_id                 = "${aws_alb.cluster_alb.zone_id}"
+#   }
+# }
 
 ## ====================  ALB
 
-resource "aws_security_group" "alb_security_group" {
-  name        = "${var.clustername}-alb-sq"
-  vpc_id      = "${aws_vpc.vpc_main.id}"
+# resource "aws_security_group" "alb_security_group" {
+#   name        = "${var.clustername}-alb-sq"
+#   vpc_id      = "${aws_vpc.vpc_main.id}"
 
-  ingress {
-    from_port   = 80
-    protocol    = "TCP"
-    to_port     = 80
-    cidr_blocks = [aws_vpc.vpc_main.cidr_block]
-  }
+#   ingress {
+#     from_port   = 80
+#     protocol    = "TCP"
+#     to_port     = 80
+#     cidr_blocks = [aws_vpc.vpc_main.cidr_block]
+#   }
 
-  egress {
-    from_port   = 0
-    protocol    = "-1"
-    to_port     = 0
-    cidr_blocks = [aws_vpc.vpc_main.cidr_block]
-  }
-}
+#   egress {
+#     from_port   = 0
+#     protocol    = "-1"
+#     to_port     = 0
+#     cidr_blocks = [aws_vpc.vpc_main.cidr_block]
+#   }
+# }
 
-resource "aws_alb" "cluster_alb" {
-  name            = "${var.clustername}-alb"
-  internal        = false
-  security_groups = ["${aws_security_group.alb_security_group.id}"]
-  subnets         = aws_subnet.subnets[*].id
-}
+# resource "aws_alb" "cluster_alb" {
+#   name            = "${var.clustername}-alb"
+#   internal        = false
+#   security_groups = ["${aws_security_group.alb_security_group.id}"]
+#   subnets         = aws_subnet.subnets[*].id
+# }
 
-resource "aws_alb_listener" "alb_listener" {
-  load_balancer_arn = "${aws_alb.cluster_alb.arn}"
-  port              = "80"
-  protocol          = "HTTP"
+# resource "aws_alb_listener" "alb_listener" {
+#   load_balancer_arn = "${aws_alb.cluster_alb.arn}"
+#   port              = "80"
+#   protocol          = "HTTP"
   
-  default_action {
-    type              = "forward"
-    target_group_arn  = "${aws_alb_target_group.target_group.arn}"
-  }
+#   default_action {
+#     type              = "forward"
+#     target_group_arn  = "${aws_alb_target_group.target_group.arn}"
+#   }
 
-  depends_on = ["aws_alb_target_group.target_group"]
-}
+#   depends_on = ["aws_alb_target_group.target_group"]
+# }
 
-resource "aws_alb_target_group" "target_group" {
-  name        = "${var.clustername}-targetgroup"
-  port        = 80
-  protocol    = "HTTP"
-  vpc_id      = "${aws_vpc.vpc_main.id}"
-  target_type = "ip"
+# resource "aws_alb_target_group" "target_group" {
+#   name        = "${var.clustername}-targetgroup"
+#   port        = 80
+#   protocol    = "HTTP"
+#   vpc_id      = "${aws_vpc.vpc_main.id}"
+#   target_type = "ip"
 
-  health_check {
-    healthy_threshold   = "3"
-    interval            = "30"
-    protocol            = "HTTP"
-    matcher             = "200"
-    timeout             = "3"
-    path                = "/"
-    unhealthy_threshold = "2"
-  }
-}
+#   health_check {
+#     healthy_threshold   = "3"
+#     interval            = "30"
+#     protocol            = "HTTP"
+#     matcher             = "200"
+#     timeout             = "3"
+#     path                = "/"
+#     unhealthy_threshold = "2"
+#   }
+# }
 
 
 
