@@ -26,6 +26,7 @@ current_time = currtime.strftime("%H:%M:%S")
 
 backapp = "http://epamapp-back:8080"
 
+
 def cpustress(seconds):
     assert type(seconds) == type(1) and seconds < 120
     start=time()

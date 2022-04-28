@@ -37,7 +37,7 @@ terraform {
 #====================== ECR 
 
 resource "aws_ecr_repository" "app_repo_back_prod" {
-  name = "${var.prefix}-epamapp-back-prod"
+  name = "epamapp-back-prod"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -73,7 +73,7 @@ resource "aws_ecr_lifecycle_policy" "repo_policy_back_prod" {
 
 
 resource "aws_ecr_repository" "app_repo_front_prod" {
-  name = "${var.prefix}-epamapp-front-prod"
+  name = "epamapp-front-prod"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -87,7 +87,7 @@ resource "aws_ecr_lifecycle_policy" "repo_policy_front_prod" {
 }
 
 resource "aws_ecr_repository" "app_repo_back_dev" {
-  name = "${var.prefix}-epamapp-back-dev"
+  name = "epamapp-back-dev"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -101,7 +101,7 @@ resource "aws_ecr_lifecycle_policy" "repo_policy_back_dev" {
 }
 
 resource "aws_ecr_repository" "app_repo_front_dev" {
-  name = "${var.prefix}-epamapp-front-dev"
+  name = "epamapp-front-dev"
 
   image_scanning_configuration {
     scan_on_push = true
