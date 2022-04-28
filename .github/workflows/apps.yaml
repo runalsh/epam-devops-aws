@@ -1,0 +1,298 @@
+on:
+  push:
+    branches: [ prod ]
+    paths:
+      - 'back/**'
+      - 'front/**'
+      - '!*.md'
+    # paths-ignore:
+    #   - '*.md'
+     # - '.github/workflows/**'
+  pull_request:
+    branches: [ prod ]
+    paths:
+      - 'back/**'
+      - 'front/**'
+      - '!*.md'
+    # paths-ignore:
+    #   - '*.md'
+     # - '.github/workflows/**'
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    env:
+      ACTION: Test Pytest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+        pip install -r ./back/requirements.txt
+        pip install -r ./front/requirements.txt
+    - name: Test with pytest back app
+      working-directory: ./back
+      run: |
+        pytest
+    - name: Test with pytest front app
+      working-directory: ./front
+      run: |
+        pytest
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+            ${{ github.actor }} created commit:
+            *Commit message:* ${{ github.event.commits[0].message }}
+            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+            *Action:* ${{ env.ACTION }}
+            *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+    # - name: Send Gmail notification
+    #   if: ${{ failure() }}
+    #   uses: dawidd6/action-send-mail@v3
+    #   with:
+    #     server_address: smtp.yandex.ru
+    #     server_port: 465
+    #     username: ${{secrets.YANDEX_MAIL_USERNAME}}
+    #     password: ${{secrets.YANDEX_MAIL_PASSWORD}}
+    #     subject: ${{ github.job }} job has ${{ job.status }}
+    #     to: ${{ secrets.MAIL_FOR_INFO }}
+    #     from: github action mailer
+    #     body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+ 
+  # bandit:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     ACTION: Test Bandit test
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Set up Python 3.9
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: 3.9
+  #   - name: Install dependencies
+  #     run: |
+  #       python -m pip install --upgrade pip
+  #       pip install bandit
+  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  #   - name: analyze source code with bandit back app
+  #     run: |
+  #       bandit -c ./back/bandit.yml -s B104,B608,B201,B101 -r ./back
+  #   - name: analyze source code with bandit front app
+  #     run: |
+  #       bandit -c ./front/bandit.yml -s B104,B608,B201,B101 -r ./front  
+
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #           ${{ github.actor }} created commit:
+  #           *Commit message:* ${{ github.event.commits[0].message }}
+  #           *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #           *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #           *Action:* ${{ env.ACTION }}
+  #           *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
+    
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: SonarCloud Scan
+      ## continue-on-error: true
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+            ${{ github.actor }} created commit:
+            *Commit message:* ${{ github.event.commits[0].message }}
+            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+            *Action:* ${{ env.ACTION }}
+            *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+
+  pylint:
+    runs-on: ubuntu-latest 
+    env:
+      ACTION: Test Linter check
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint 
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with pylint front app
+      working-directory: ./front
+      run: |
+        pylint --exit-zero $(ls -R | grep .py$ | xargs)
+    - name: Lint with pylint back app
+      working-directory: ./back
+      run: |
+        pylint --exit-zero $(ls -R | grep .py$ | xargs)    
+    
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+            ${{ github.actor }} created commit:
+            *Commit message:* ${{ github.event.commits[0].message }}
+            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+            *Action:* ${{ env.ACTION }}
+            *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+        
+  #  checkenv:
+  #   name: enviroment check
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #       - name: Print environment variables
+  #         uses: FranzDiebold/github-env-vars-action@v1.2.0
+  #       
+  #         env:
+  #           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+  #         run: |
+  #           echo "GITHUB_REPOSITORY_SLUG=$GITHUB_REPOSITORY_SLUG"
+  #           echo "GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER"
+  #           echo "GITHUB_REPOSITORY_OWNER_SLUG=$GITHUB_REPOSITORY_OWNER_SLUG"
+  #           echo "GITHUB_REPOSITORY_NAME=$GITHUB_REPOSITORY_NAME"
+  #           echo "GITHUB_REPOSITORY_NAME_SLUG=$GITHUB_REPOSITORY_NAME_SLUG"
+  #           echo "GITHUB_REF_SLUG=$GITHUB_REF_SLUG"
+  #           echo "GITHUB_REF_NAME=$github_ref_name"
+  #           echo "GITHUB_REF_NAME_SLUG=$github_ref_name_SLUG"
+  #           echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
+
+      
+  buiildpushback:
+    needs: [pytest, pylint, sonarcloud]
+    # needs: deployaws
+    env:
+      ACTION: Build and Push backend image to AWS ECR
+    name:  Build and Push backend image to AWS ECR
+    defaults:
+      run:
+        working-directory: back
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: epamapp-back
+          IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+
+  buiildpushfront:
+    # needs: deployaws
+    needs: buiildpushback
+    env:
+      ACTION:  Build and Push frontend image to AWS ECR
+    name:  Build and Push frontend image to AWS ECR
+    defaults:
+      run:
+        working-directory: front
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: epamapp-front
+          IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
