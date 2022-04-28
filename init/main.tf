@@ -504,24 +504,24 @@ resource "aws_sns_topic" "alarm" {
 
 ##=============================EKS
 
-resource "aws_eks_cluster" "eks_cluster" {
-  name     = var.clustername
-  role_arn = aws_iam_role.eks-cluster.arn
-  version    = "1.22"
-  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+# resource "aws_eks_cluster" "eks_cluster" {
+#   name     = var.clustername
+#   role_arn = aws_iam_role.eks-cluster.arn
+#   version    = "1.22"
+#   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-  vpc_config {
-    # endpoint_private_access = true
-    # endpoint_public_access  = true
-    security_group_ids = [aws_security_group.cluster_sg.id]
-    subnet_ids = aws_subnet.subnets[*].id
-  }
-  depends_on = [
-     aws_iam_role_policy_attachment.eks-cluster-policy,
-     aws_iam_role_policy_attachment.eks-vpc-policy,
-     aws_cloudwatch_log_group.eks-logs
-  ]
-}
+#   vpc_config {
+#     # endpoint_private_access = true
+#     # endpoint_public_access  = true
+#     security_group_ids = [aws_security_group.cluster_sg.id]
+#     subnet_ids = aws_subnet.subnets[*].id
+#   }
+#   depends_on = [
+#      aws_iam_role_policy_attachment.eks-cluster-policy,
+#      aws_iam_role_policy_attachment.eks-vpc-policy,
+#      aws_cloudwatch_log_group.eks-logs
+#   ]
+# }
 
 # resource "aws_eks_node_group" "nodes" {
 #   cluster_name    = aws_eks_cluster.eks_cluster.name
@@ -554,15 +554,15 @@ resource "aws_eks_cluster" "eks_cluster" {
 #     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
 #     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
 #     aws_iam_role_policy_attachment.cloudwatch-logs-full-access
-##     aws_iam_role_policy_attachment.route53_modify_policy
+# #     aws_iam_role_policy_attachment.route53_modify_policy
 #   ]
 # }
 
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.eks_cluster.endpoint
-  token                  = data.aws_eks_cluster_auth.eks_cluster.token
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
-}
+# provider "kubernetes" {
+#   host                   = data.aws_eks_cluster.eks_cluster.endpoint
+#   token                  = data.aws_eks_cluster_auth.eks_cluster.token
+#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
+# }
 
 
 # #=========  not scale - for testing ======================
