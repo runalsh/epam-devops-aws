@@ -200,7 +200,7 @@ jobs:
 
       
   buiildpushback:
-    needs: [pytest, pylint, sonarcloud]
+    needs: [pytest, pylint, sonarcloud, bandit]
     # needs: deployaws
     env:
       ACTION: Build and Push backend image to AWS ECR
