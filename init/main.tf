@@ -438,9 +438,9 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   statistic           = "Average"
   threshold           = "80"
 
-  dimensions = {
-    ClusterName = "${aws_eks_cluster.eks_cluster.name}"
-  }
+  # dimensions = {
+  #   ClusterName = "${aws_eks_cluster.eks_cluster.name}"
+  # }
 
   alarm_actions = ["${aws_sns_topic.alarm.arn}"]
 }
