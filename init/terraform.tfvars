@@ -7,7 +7,7 @@ prefix = "runalsh"
 
 #custer
 clustername        = "epam-py-cluster"
-clusternode_type   = "t3.small"
+clusternode_type   = "t3a.medium"
 minnumberofnodes    = 1
 maxnumberofnodes    = 2
 desirednumberofnodes = 1
@@ -16,7 +16,7 @@ desirednumberofnodes = 1
 #instance for testing
 key_name2          = "oracle"
 key_name           = "keykeykey"
-instance_type       = "t3a.medium"
+instance_type       = "t2.micro"
 
 #database
 db_instance_type    = "db.t3.micro"
