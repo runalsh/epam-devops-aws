@@ -3,15 +3,15 @@ on:
     branches: [ prod ]
     paths-ignore:
       - '*.md'
-      - 'back/**'
-      - 'front/**'
+      # - 'back/**'
+      # - 'front/**'
     #  - '.github/workflows/**'
   pull_request:
     branches: [ prod ]
     paths-ignore:
       - '*.md'
-      - 'back/**'
-      - 'front/**'
+      # - 'back/**'
+      # - 'front/**'
      # - '.github/workflows/**'
 
 
