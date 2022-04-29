@@ -15,7 +15,7 @@ Simple Python app to get data from https://www.metaweather.com/api with storing 
  - Tests - Pylint, Sonarcube, Pytest, Bandit
  - Alerts - AWS SNS 
  - Alerts for Ci/Cd - Telegram
- - Blue\green by wealth with Route 53 Policy
+ - Blue\green by wealth with AWS Route 53 Policy
 
 
 
