@@ -13,7 +13,9 @@ Simple Python app to get data from https://www.metaweather.com/api with storing 
  - Runtime/Deployment - Ci/Cd Github Action
  - Scalability/redundancy - Kubernetes HPA
  - Tests - Pylint, Sonarcube, Pytest, Bandit
- - Alert - AWS SNS 
+ - Alerts - AWS SNS 
+ - Alerts for Ci/Cd - Telegram
+ - Blue\green by wealth with Route 53 Policy
 
 
 
