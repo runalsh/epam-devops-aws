@@ -16,7 +16,7 @@ desirednumberofnodes = 1
 #instance for testing
 key_name2          = "oracle"
 key_name           = "keykeykey"
-instance_type       = "t2.micro"
+instance_type       = "t3a.medium"
 
 #database
 db_instance_type    = "db.t3.micro"
