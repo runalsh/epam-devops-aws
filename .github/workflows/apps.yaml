@@ -1,22 +1,5 @@
 on:
-  push:
-    branches: [ prod ]
-    paths:
-      - 'back/**'
-      - 'front/**'
-      - '!*.md'
-    # paths-ignore:
-    #   - '*.md'
-     # - '.github/workflows/**'
-  pull_request:
-    branches: [ prod ]
-    paths:
-      - 'back/**'
-      - 'front/**'
-      - '!*.md'
-    # paths-ignore:
-    #   - '*.md'
-     # - '.github/workflows/**'
+  workflow_dispatch:
 
 jobs:
   pytest:
