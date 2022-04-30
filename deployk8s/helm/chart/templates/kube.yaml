@@ -206,14 +206,14 @@ spec:
         args:
         - --source=service
         - --source=ingress
-        - --domain-filter=a.runalsh.ru # will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
+        - --domain-filter=a.runalsh.ru
         - --provider=aws
-        # - --policy=upsert-only # would prevent ExternalDNS from deleting any records, omit to enable full synchronization
-        - --aws-zone-type=public # only look at public hosted zones (valid values are public, private or no value for both)
+        # - --policy=upsert-only
+        - --aws-zone-type=public
         - --registry=txt
         - --txt-owner-id=my-hostedzone-identifier
       securityContext:
-        fsGroup: 65534 # For ExternalDNS to be able to read Kubernetes and AWS token files
+        fsGroup: 65534 
 
 
 # ---
