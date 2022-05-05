@@ -88,8 +88,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    - name: clean
-      run: docker rmi $(docker images | grep "^${{ github.sha }}" | awk "{print $3}")
 
   buiildpushback:
     runs-on: self-hosted
@@ -185,4 +183,4 @@ jobs:
           *Action:* ${{ env.ACTION }}
           *Status:* ${{ job.status }}
         format: "markdown"
-        disable_web_page_preview: true    
+        disable_web_page_preview: true
