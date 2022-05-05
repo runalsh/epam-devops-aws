@@ -58,7 +58,6 @@ jobs:
   #       pytest
 
   checkenv:
-    name: enviroment check
     runs-on: self-hosted
     steps:
         - name: Print environment variables
