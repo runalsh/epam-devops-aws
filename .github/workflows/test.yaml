@@ -1,0 +1,10 @@
+on: [workflow_dispatch, workflow_call]
+jobs:
+  update-os:
+    # The type of runner that the job will run on
+    runs-on: self-hosted
+    steps:
+      - name: Update Ubuntu
+        run: |
+          sudo apt-get update -y
+          sudo apt-get upgrade -y

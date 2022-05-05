@@ -565,17 +565,34 @@ resource "aws_sns_topic" "alarm" {
 # }
 
 
-# #=========  not scale - for testing ======================
-# resource "aws_instance" "wp_instance" {
-# ami                     = "ami-0ca64d1b4e674f837"
-# instance_type           = "t2.micro"
-# subnet_id      = aws_subnet.subnets.0.id
-# vpc_security_group_ids  = [aws_security_group.sg_main.id]
-# key_name                = var.key_name2
-# lifecycle {
-# create_before_destroy = true
-# }
-# }  
+#=========  not scale - for testing ======================
+resource "aws_instance" "instance" {
+ami                     = "ami-0ca64d1b4e674f837"
+instance_type           = "t2.micro"
+subnet_id      = aws_subnet.subnets.0.id
+vpc_security_group_ids  = [aws_security_group.sg_main.id]
+key_name                = var.key_name2
+
+user_data = data.template_cloudinit_config.cloudinit_config.rendered
+
+lifecycle {
+create_before_destroy = true
+}
+}  
+
+data "template_file" "cloudinit_main" {
+  template = file("./ci.yml")
+}
+
+data "template_cloudinit_config" "cloudinit_config" {
+  gzip          = false
+  base64_encode = false
+  part {
+    filename     = "./ci.yml"
+    content_type = "text/cloud-config"
+    content      = data.template_file.cloudinit_main.rendered
+  }
+}
 
 ##  =========================== S53
 
