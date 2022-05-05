@@ -8,29 +8,29 @@ jobs:
   #       run: |
   #         sudo apt-get update -y
   #         sudo apt-get upgrade -y
-  installdocker:
-    # The type of runner that the job will run on
-    runs-on: self-hosted
-    steps:
-      - name: Install or Update Docker
-        run: |
-          if [ -x "$(command -v docker)" ]; then
-            echo "Update docker"
-            sudo apt update -y
-            sudo apt-get --only-upgrade install docker-ce -y
-          else
-            echo "Install docker"
-            sudo apt update
-            sudo apt upgrade -y
-            sudo apt-get install apt-transport-https -y
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-            sudo apt update
-            apt-cache policy docker-ce
-            sudo apt-get install docker-ce -y
-          fi        
-      # sudo usermod -aG docker dockeruser
-      # echo "User jhanley added to docker group. Re-login to assume docker group membership."
+  # installdocker:
+  #   # The type of runner that the job will run on
+  #   runs-on: self-hosted
+  #   steps:
+  #     - name: Install or Update Docker
+  #       run: |
+  #         if [ -x "$(command -v docker)" ]; then
+  #           echo "Update docker"
+  #           sudo apt update -y
+  #           sudo apt-get --only-upgrade install docker-ce -y
+  #         else
+  #           echo "Install docker"
+  #           sudo apt update
+  #           sudo apt upgrade -y
+  #           sudo apt-get install apt-transport-https -y
+  #           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  #           sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+  #           sudo apt update
+  #           apt-cache policy docker-ce
+  #           sudo apt-get install docker-ce -y
+  #         fi        
+  #     # sudo usermod -aG docker dockeruser
+  #     # echo "User jhanley added to docker group. Re-login to assume docker group membership."
         
   pytest:
     runs-on: self-hosted
@@ -56,33 +56,7 @@ jobs:
       working-directory: ./front
       run: |
         pytest
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-            ${{ github.actor }} created commit:
-            *Commit message:* ${{ github.event.commits[0].message }}
-            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-            *Action:* ${{ env.ACTION }}
-            *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
-    # - name: Send Gmail notification
-    #   if: ${{ failure() }}
-    #   uses: dawidd6/action-send-mail@v3
-    #   with:
-    #     server_address: smtp.yandex.ru
-    #     server_port: 465
-    #     username: ${{secrets.YANDEX_MAIL_USERNAME}}
-    #     password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-    #     subject: ${{ github.job }} job has ${{ job.status }}
-    #     to: ${{ secrets.MAIL_FOR_INFO }}
-    #     from: github action mailer
-    #     body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+
   sonarcloud:
     runs-on: self-hosted
     steps:
@@ -95,4 +69,5 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    
+    - name: clean
+      run: docker rmi $(docker images | grep "^${{ github.sha }}" | awk "{print $3}")
