@@ -28,9 +28,10 @@ jobs:
             sudo apt update
             apt-cache policy docker-ce
             sudo apt-get install docker-ce -y
+          fi        
       # sudo usermod -aG docker dockeruser
       # echo "User jhanley added to docker group. Re-login to assume docker group membership."
-          fi        
+        
   pytest:
     runs-on: ubuntu-latest
     env:
