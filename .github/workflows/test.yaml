@@ -59,7 +59,7 @@ jobs:
 
   checkenv:
     name: enviroment check
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
         - name: Print environment variables
           uses: FranzDiebold/github-env-vars-action@v1.2.0
