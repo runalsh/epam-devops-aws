@@ -33,7 +33,7 @@ jobs:
       # echo "User jhanley added to docker group. Re-login to assume docker group membership."
         
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       ACTION: Test Pytest
     steps:
@@ -84,7 +84,7 @@ jobs:
     #     from: github action mailer
     #     body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
   sonarcloud:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
       with:
@@ -96,18 +96,3 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-            ${{ github.actor }} created commit:
-            *Commit message:* ${{ github.event.commits[0].message }}
-            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-            *Action:* ${{ env.ACTION }}
-            *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true       
