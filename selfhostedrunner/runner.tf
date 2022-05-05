@@ -234,11 +234,11 @@ resource "aws_cloudwatch_log_stream" "runner-logs-stream" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_high_runner" {
-  alarm_name          = "cpu_utilization_high"
+  alarm_name          = "${var.runnername}-cpu_utilization_high"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "2"
   metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
+  namespace           = "CWAgent"
   period              = "30"
   statistic           = "Average"
   threshold           = "80"
@@ -249,6 +249,35 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high_runner" {
 
   alarm_actions = ["${aws_sns_topic.alarmrunner.arn}"]
 }
+
+resource "aws_cloudwatch_metric_alarm" "disk_low_runner" {
+  alarm_name        = "${var.runnername}-low-disk-alarm"
+  alarm_description = "Alerts on disk space lower on 1gb"
+
+  // Metric
+  namespace   = "CWAgent"
+  metric_name = "disk_inodes_free"
+
+  dimensions = {
+        InstanceId = aws_instance.runner.id
+        path          = "/"
+        device        = "xvda1"
+        fstype        = "xfs"
+    }
+
+  // For every minute
+  evaluation_periods = "1"
+  period             = "60"
+
+  // If totals 1gb or lower (in bytes)
+  statistic           = "Minimum"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  threshold           = "1000000000"
+  datapoints_to_alarm = 1
+
+    alarm_actions = ["${aws_sns_topic.alarmrunner.arn}"]
+}
+
 
 resource "aws_sns_topic" "alarmrunner" {
   name            = "${var.prefix}-runner-alarms"

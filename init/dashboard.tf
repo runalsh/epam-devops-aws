@@ -114,7 +114,7 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
         {
             "height": 6,
             "width": 12,
-            "y": 12,
+            "y": 11,
             "x": 12,
             "type": "metric",
             "properties": {
@@ -171,10 +171,10 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
             }
         },
         {
-            "height": 6,
-            "width": 12,
+            "height": 5,
+            "width": 8,
             "y": 6,
-            "x": 0,
+            "x": 9,
             "type": "metric",
             "properties": {
                 "region": "eu-central-1",
@@ -198,10 +198,10 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
             }
         },
         {
-            "height": 6,
-            "width": 12,
+            "height": 5,
+            "width": 7,
             "y": 6,
-            "x": 12,
+            "x": 17,
             "type": "metric",
             "properties": {
                 "region": "eu-central-1",
@@ -225,11 +225,11 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
             }
         },
         {
-            "type": "metric",
-            "x": 0,
-            "y": 12,
-            "width": 6,
             "height": 3,
+            "width": 6,
+            "y": 11,
+            "x": 0,
+            "type": "metric",
             "properties": {
                 "metrics": [
                     [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "db", { "period": 300, "stat": "Sum" } ]
@@ -247,11 +247,11 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
             }
         },
         {
-            "type": "metric",
-            "x": 6,
-            "y": 12,
-            "width": 6,
             "height": 6,
+            "width": 6,
+            "y": 11,
+            "x": 6,
+            "type": "metric",
             "properties": {
                 "metrics": [
                     [ "AWS/RDS", "FreeableMemory", "DBInstanceIdentifier", "db", { "period": 300, "stat": "Average" } ]
@@ -267,9 +267,25 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
                 "view": "timeSeries",
                 "stacked": true
             }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 6,
+            "width": 9,
+            "height": 5,
+            "properties": {
+                "view": "singleValue",
+                "stacked": false,
+                "metrics": [
+                    [ "CWAgent", "disk_used_percent", "InstanceId", "i-05ef9c45f7896e3d3", { "region": "eu-central-1" } ],
+                    [ "CWAgent", "mem_used_percent", "InstanceId", "i-05ef9c45f7896e3d3", { "region": "eu-central-1" } ],
+                    [ "CWAgent", "cpu_usage_system", "InstanceId", "i-05ef9c45f7896e3d3", { "region": "eu-central-1" } ]
+                ],
+                "region": "eu-central-1",
+                "title": "GITHUB RUNNER",
+                "period": 300
+            }
         }
     ]
-}
-
-EOF
 }
