@@ -60,7 +60,7 @@ jobs:
   checkenv:
     runs-on: self-hosted
     steps:  
-        - uses: FranzDiebold/github-env-vars-action@v1.2.0
+        - uses: FranzDiebold/github-env-vars-action@v2.3.1
         - name: Print environment variables
           env:
             ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
@@ -90,3 +90,99 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     - name: clean
       run: docker rmi $(docker images | grep "^${{ github.sha }}" | awk "{print $3}")
+
+  buiildpushback:
+    runs-on: self-hosted
+    # needs: deployaws
+    env:
+      ACTION: Build and Push backend image to AWS ECR
+    name:  Build and Push backend image to AWS ECR
+    defaults:
+      run:
+        working-directory: back
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: epamapp-back
+          IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+
+  buiildpushfront:
+    runs-on: self-hosted
+    # needs: deployaws
+    env:
+      ACTION:  Build and Push frontend image to AWS ECR
+    name:  Build and Push frontend image to AWS ECR
+    defaults:
+      run:
+        working-directory: front
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: epamapp-front
+          IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true    
