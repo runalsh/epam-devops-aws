@@ -126,6 +126,7 @@ packages:
  - nano
  - nmon
  - ncdu
+ - python3.8
  - net-tools
  - amazon-cloudwatch-agent
 
