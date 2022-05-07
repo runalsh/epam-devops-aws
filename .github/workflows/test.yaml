@@ -168,24 +168,10 @@ jobs:
 
   cleandocker:
     runs-on: self-hosted
+    needs: [sonarcloud,buiildpushfront,buiildpushback]
     env:
       ACTION:  Clean builded images for save space
     steps:
       - name: Run docker rmi
         run: |
-          docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | awk '{print $3}') --force
-      - name: send message to tg
-        if: ${{ failure() }}
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: |
-            ${{ github.actor }} created commit:
-            *Commit message:* ${{ github.event.commits[0].message }}
-            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-            *Action:* ${{ env.ACTION }}
-            *Status:* ${{ job.status }}
-          format: "markdown"
-          disable_web_page_preview: true
+          docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | awk '{print $3}' | uniq -u) --force
