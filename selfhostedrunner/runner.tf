@@ -38,16 +38,7 @@ terraform {
 
 #============ RES ==========
 
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
-  }
 
-owners = ["099720109477"] # Canonical
-
-}
 
 resource "tls_private_key" "example" {
   algorithm = "RSA"
@@ -316,12 +307,12 @@ resource "aws_sns_topic" "alarmrunner" {
 
 # =========  RUNNER  ======================
 
-data "aws_ami" "ecs_optimized" {
+data "aws_ami" "ami" {
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-ecs-hvm-*-x86_64-*"]
+    values = ["amzn2-ami-hvm*"]
   }
 
   owners = [
@@ -329,8 +320,19 @@ data "aws_ami" "ecs_optimized" {
   ]
 }
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+owners = ["099720109477"] # Canonical
+
+}
+
 resource "aws_instance" "runner" {
-    ami                     = data.aws_ami.ecs_optimized.id
+    ami                     = data.aws_ami.ami.id
     instance_type           = var.runner_type
     subnet_id      = aws_subnet.runner-subnets.0.id
     vpc_security_group_ids  = [aws_security_group.sg_runner_main.id]
