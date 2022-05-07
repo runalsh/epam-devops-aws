@@ -5,11 +5,11 @@ jobs:
     env:
       ACTION: Update system
     steps:
-      - name: Update Ubuntu
+      - name: Update
         run: |
           sudo yum update -y
           sudo yum upgrade -y
-          
+
   pytest:
     runs-on: self-hosted
     env:
