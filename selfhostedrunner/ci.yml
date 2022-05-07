@@ -128,6 +128,7 @@ packages:
  - ncdu
  - amazon-linux-extras
  - python3.8
+ - python3-pip
  - net-tools
  - amazon-cloudwatch-agent
 
@@ -137,7 +138,6 @@ ssh_authorized_keys:
     
 runcmd:
   - curl https://freedns.afraid.org/dynamic/update.php?U2NnUkQ5TlYydkk0Wm5UeEVRT0c6MTk3NTIyNDc=
-#   - yum install -y amazon-cloudwatch-agent
   - mkdir -p /usr/share/collectd
   - touch /usr/share/collectd/types.db
   - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:AmazonCloudWatch-linux -s
