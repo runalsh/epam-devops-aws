@@ -8,7 +8,7 @@ jobs:
       - name: Update Ubuntu
         run: |
           sudo apt update -y
-          sudo ap upgrade -y
+          sudo apt upgrade -y
 
 
   pytest:
@@ -18,9 +18,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: 3.8
+        cache: "pip"
+      env:
+        AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -36,142 +39,142 @@ jobs:
       run: |
         pytest
 
-  checkenv:
-    runs-on: self-hosted
-    steps:  
-        - uses: FranzDiebold/github-env-vars-action@v1
-        - name: Print environment variables
-          env:
-            ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-          run: |
-            echo "GITHUB_REPOSITORY_SLUG=$GITHUB_REPOSITORY_SLUG"
-            echo "GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER"
-            echo "GITHUB_REPOSITORY_OWNER_SLUG=$GITHUB_REPOSITORY_OWNER_SLUG"
-            echo "GITHUB_REPOSITORY_NAME=$GITHUB_REPOSITORY_NAME"
-            echo "GITHUB_REPOSITORY_NAME_SLUG=$GITHUB_REPOSITORY_NAME_SLUG"
-            echo "GITHUB_REF_SLUG=$GITHUB_REF_SLUG"
-            echo "GITHUB_REF_NAME=$github_ref_name"
-            echo "GITHUB_REF_NAME_SLUG=$github_ref_name_SLUG"
-            echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
+  # checkenv:
+  #   runs-on: self-hosted
+  #   steps:  
+  #       - uses: FranzDiebold/github-env-vars-action@v1
+  #       - name: Print environment variables
+  #         env:
+  #           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+  #         run: |
+  #           echo "GITHUB_REPOSITORY_SLUG=$GITHUB_REPOSITORY_SLUG"
+  #           echo "GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER"
+  #           echo "GITHUB_REPOSITORY_OWNER_SLUG=$GITHUB_REPOSITORY_OWNER_SLUG"
+  #           echo "GITHUB_REPOSITORY_NAME=$GITHUB_REPOSITORY_NAME"
+  #           echo "GITHUB_REPOSITORY_NAME_SLUG=$GITHUB_REPOSITORY_NAME_SLUG"
+  #           echo "GITHUB_REF_SLUG=$GITHUB_REF_SLUG"
+  #           echo "GITHUB_REF_NAME=$github_ref_name"
+  #           echo "GITHUB_REF_NAME_SLUG=$github_ref_name_SLUG"
+  #           echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
 
 
-  sonarcloud:
-    runs-on: self-hosted
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: SonarCloud Scan
-      ## continue-on-error: true
-      uses: sonarsource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  # sonarcloud:
+  #   runs-on: self-hosted
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       fetch-depth: 0
+  #   - name: SonarCloud Scan
+  #     ## continue-on-error: true
+  #     uses: sonarsource/sonarcloud-github-action@master
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  buiildpushback:
-    runs-on: self-hosted
-    # needs: deployaws
-    env:
-      ACTION: Build and Push backend image to AWS ECR
-    name:  Build and Push backend image to AWS ECR
-    defaults:
-      run:
-        working-directory: back
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-back
-          IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+  # buiildpushback:
+  #   runs-on: self-hosted
+  #   # needs: deployaws
+  #   env:
+  #     ACTION: Build and Push backend image to AWS ECR
+  #   name:  Build and Push backend image to AWS ECR
+  #   defaults:
+  #     run:
+  #       working-directory: back
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1
+  #   - name: Build, tag, and push image to Amazon ECR
+  #     id: build-image
+  #     env:
+  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #         ECR_REPOSITORY: epamapp-back
+  #         IMAGE_TAG: ${{ github.sha }}
+  #     run: |
+  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
 
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          ${{ github.actor }} created commit:
-          *Commit message:* ${{ github.event.commits[0].message }}
-          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-          *Action:* ${{ env.ACTION }}
-          *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #         ${{ github.actor }} created commit:
+  #         *Commit message:* ${{ github.event.commits[0].message }}
+  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #         *Action:* ${{ env.ACTION }}
+  #         *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
 
-  buiildpushfront:
-    runs-on: self-hosted
-    # needs: deployaws
-    env:
-      ACTION:  Build and Push frontend image to AWS ECR
-    name:  Build and Push frontend image to AWS ECR
-    defaults:
-      run:
-        working-directory: front
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-front
-          IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+  # buiildpushfront:
+  #   runs-on: self-hosted
+  #   # needs: deployaws
+  #   env:
+  #     ACTION:  Build and Push frontend image to AWS ECR
+  #   name:  Build and Push frontend image to AWS ECR
+  #   defaults:
+  #     run:
+  #       working-directory: front
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1
+  #   - name: Build, tag, and push image to Amazon ECR
+  #     id: build-image
+  #     env:
+  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #         ECR_REPOSITORY: epamapp-front
+  #         IMAGE_TAG: ${{ github.sha }}
+  #     run: |
+  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
 
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          ${{ github.actor }} created commit:
-          *Commit message:* ${{ github.event.commits[0].message }}
-          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-          *Action:* ${{ env.ACTION }}
-          *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #         ${{ github.actor }} created commit:
+  #         *Commit message:* ${{ github.event.commits[0].message }}
+  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #         *Action:* ${{ env.ACTION }}
+  #         *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
 
 
-  cleandocker:
-    runs-on: self-hosted
-    needs: [sonarcloud,buiildpushfront,buiildpushback]
-    env:
-      ACTION:  Clean builded images for save space
-    steps:
-      - name: Run docker rmi
-        run: |
-          docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | awk '{print $3}') --force
-        continue-on-error: true
+  # cleandocker:
+  #   runs-on: self-hosted
+  #   needs: [sonarcloud,buiildpushfront,buiildpushback]
+  #   env:
+  #     ACTION:  Clean builded images for save space
+  #   steps:
+  #     - name: Run docker rmi
+  #       run: |
+  #         docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | awk '{print $3}') --force
+  #       continue-on-error: true
