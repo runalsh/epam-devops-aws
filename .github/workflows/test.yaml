@@ -1,61 +1,39 @@
 on: [workflow_dispatch, workflow_call]
 jobs:
-  # update-os:
-  #   # The type of runner that the job will run on
-  #   runs-on: self-hosted
-  #   steps:
-  #     - name: Update Ubuntu
-  #       run: |
-  #         sudo apt-get update -y
-  #         sudo apt-get upgrade -y
-  # installdocker:
-  #   # The type of runner that the job will run on
-  #   runs-on: self-hosted
-  #   steps:
-  #     - name: Install or Update Docker
-  #       run: |
-  #         if [ -x "$(command -v docker)" ]; then
-  #           echo "Update docker"
-  #           sudo apt update -y
-  #           sudo apt-get --only-upgrade install docker-ce -y
-  #         else
-  #           echo "Install docker"
-  #           sudo apt update
-  #           sudo apt upgrade -y
-  #           sudo apt-get install apt-transport-https -y
-  #           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  #           sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-  #           sudo apt update
-  #           apt-cache policy docker-ce
-  #           sudo apt-get install docker-ce -y
-  #         fi        
-  #     # sudo usermod -aG docker dockeruser
-  #     # echo "User jhanley added to docker group. Re-login to assume docker group membership."
-        
-  # pytest:
-  #   runs-on: self-hosted
-  #   env:
-  #     ACTION: Test Pytest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Set up Python 3.9
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: 3.9
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install pytest
-  #       pip install -r ./back/requirements.txt
-  #       pip install -r ./front/requirements.txt
-  #   - name: Test with pytest back app
-  #     working-directory: ./back
-  #     run: |
-  #       pytest
-  #   - name: Test with pytest front app
-  #     working-directory: ./front
-  #     run: |
-  #       pytest
+  update-os:
+    runs-on: self-hosted
+    env:
+      ACTION: Update system
+    steps:
+      - name: Update Ubuntu
+        run: |
+          sudo yum update -y
+          sudo yum upgrade -y
+
+  pytest:
+    runs-on: self-hosted
+    env:
+      ACTION: Test Pytest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+        pip install -r ./back/requirements.txt
+        pip install -r ./front/requirements.txt
+    - name: Test with pytest back app
+      working-directory: ./back
+      run: |
+        pytest
+    - name: Test with pytest front app
+      working-directory: ./front
+      run: |
+        pytest
 
   checkenv:
     runs-on: self-hosted
@@ -184,3 +162,28 @@ jobs:
           *Status:* ${{ job.status }}
         format: "markdown"
         disable_web_page_preview: true
+
+
+  cleandocker:
+    runs-on: self-hosted
+    env:
+      ACTION:  Clean builded images for save space
+    steps:
+      - name: Run docker rmi
+        run: |
+          docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | awk '{print $3}') --force
+      - name: send message to tg
+        if: ${{ failure() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ${{ github.actor }} created commit:
+            *Commit message:* ${{ github.event.commits[0].message }}
+            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+            *Action:* ${{ env.ACTION }}
+            *Status:* ${{ job.status }}
+          format: "markdown"
+          disable_web_page_preview: true
