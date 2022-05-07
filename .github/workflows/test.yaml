@@ -9,7 +9,6 @@ jobs:
         run: |
           sudo yum update -y
           sudo yum upgrade -y
-          sudo install python3
 
 
   pytest:
