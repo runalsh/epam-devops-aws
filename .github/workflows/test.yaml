@@ -7,23 +7,20 @@ jobs:
     steps:
       - name: Update Ubuntu
         run: |
-          sudo apt update -y
-          sudo apt upgrade -y
-
-
+          sudo yum update -y
+          sudo yum upgrade -y
+          
   pytest:
     runs-on: self-hosted
     env:
       ACTION: Test Pytest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v3
-      with:
-        python-version: 3.8
-        cache: "pip"
-      env:
-        AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
+    # - name: Set up Python 3.8
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: 3.8
+    #     cache: "pip"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -38,12 +35,147 @@ jobs:
       working-directory: ./front
       run: |
         pytest
-
-  # checkenv:
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+            ${{ github.actor }} created commit:
+            *Commit message:* ${{ github.event.commits[0].message }}
+            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+            *Action:* ${{ env.ACTION }}
+            *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+    # - name: Send Gmail notification
+    #   if: ${{ failure() }}
+    #   uses: dawidd6/action-send-mail@v3
+    #   with:
+    #     server_address: smtp.yandex.ru
+    #     server_port: 465
+    #     username: ${{secrets.YANDEX_MAIL_USERNAME}}
+    #     password: ${{secrets.YANDEX_MAIL_PASSWORD}}
+    #     subject: ${{ github.job }} job has ${{ job.status }}
+    #     to: ${{ secrets.MAIL_FOR_INFO }}
+    #     from: github action mailer
+    #     body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+ 
+  # bandit:
   #   runs-on: self-hosted
-  #   steps:  
-  #       - uses: FranzDiebold/github-env-vars-action@v1
+  #   env:
+  #     ACTION: Test Bandit test
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Set up Python 3.9
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: 3.9
+  #   - name: Install dependencies
+  #     run: |
+  #       python -m pip install --upgrade pip
+  #       pip install bandit
+  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  #   - name: analyze source code with bandit back app
+  #     run: |
+  #       bandit -c ./back/bandit.yml -s B104,B608,B201,B101 -r ./back
+  #   - name: analyze source code with bandit front app
+  #     run: |
+  #       bandit -c ./front/bandit.yml -s B104,B608,B201,B101 -r ./front  
+
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #           ${{ github.actor }} created commit:
+  #           *Commit message:* ${{ github.event.commits[0].message }}
+  #           *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #           *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #           *Action:* ${{ env.ACTION }}
+  #           *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
+    
+  sonarcloud:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: SonarCloud Scan
+      ## continue-on-error: true
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+            ${{ github.actor }} created commit:
+            *Commit message:* ${{ github.event.commits[0].message }}
+            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+            *Action:* ${{ env.ACTION }}
+            *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+
+  pylint:
+    runs-on: self-hosted 
+    env:
+      ACTION: Test Linter check
+    steps:
+    - uses: actions/checkout@v2
+    # - name: Set up Python 3.9
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint 
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with pylint front app
+      working-directory: ./front
+      run: |
+        pylint --exit-zero $(ls -R | grep .py$ | xargs)
+    - name: Lint with pylint back app
+      working-directory: ./back
+      run: |
+        pylint --exit-zero $(ls -R | grep .py$ | xargs)    
+    
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+            ${{ github.actor }} created commit:
+            *Commit message:* ${{ github.event.commits[0].message }}
+            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+            *Action:* ${{ env.ACTION }}
+            *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+        
+  #  checkenv:
+  #   runs-on: self-hosted
+  #   steps:
+  #       - uses: FranzDiebold/github-env-vars-action@v2.3.1
   #       - name: Print environment variables
+  #       
   #         env:
   #           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
   #         run: |
@@ -57,115 +189,401 @@ jobs:
   #           echo "GITHUB_REF_NAME_SLUG=$github_ref_name_SLUG"
   #           echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
 
+  deploys3:
+    needs: [pytest, pylint, sonarcloud]
+    name: deploying S3 buckets
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: s3
+    env:
+      ACTION: Init S3 buckets for ECR and ECS with terraform
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+ 
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v2
 
-  # sonarcloud:
-  #   runs-on: self-hosted
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       fetch-depth: 0
-  #   - name: SonarCloud Scan
-  #     ## continue-on-error: true
-  #     uses: sonarsource/sonarcloud-github-action@master
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
 
-  # buiildpushback:
-  #   runs-on: self-hosted
-  #   # needs: deployaws
-  #   env:
-  #     ACTION: Build and Push backend image to AWS ECR
-  #   name:  Build and Push backend image to AWS ECR
-  #   defaults:
-  #     run:
-  #       working-directory: back
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v2
-  #   - name: Configure AWS credentials
-  #     uses: aws-actions/configure-aws-credentials@v1
-  #     with:
-  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-  #   - name: Login to Amazon ECR
-  #     id: login-ecr
-  #     uses: aws-actions/amazon-ecr-login@v1
-  #   - name: Build, tag, and push image to Amazon ECR
-  #     id: build-image
-  #     env:
-  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-  #         ECR_REPOSITORY: epamapp-back
-  #         IMAGE_TAG: ${{ github.sha }}
-  #     run: |
-  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
-  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
-  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+      - name: Terraform init
+        run: terraform init
+      
+      - name: Terraform validate
+        run: terraform validate
 
-  #   - name: send message to tg
-  #     if: ${{ failure() }}
-  #     uses: appleboy/telegram-action@master
-  #     with:
-  #       to: ${{ secrets.TELEGRAM_TO }}
-  #       token: ${{ secrets.TELEGRAM_TOKEN }}
-  #       message: |
-  #         ${{ github.actor }} created commit:
-  #         *Commit message:* ${{ github.event.commits[0].message }}
-  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-  #         *Action:* ${{ env.ACTION }}
-  #         *Status:* ${{ job.status }}
-  #       format: "markdown"
-  #       disable_web_page_preview: true
+      - name: Terraform plan
+        id: plan
+        run: terraform plan
 
-  # buiildpushfront:
-  #   runs-on: self-hosted
-  #   # needs: deployaws
-  #   env:
-  #     ACTION:  Build and Push frontend image to AWS ECR
-  #   name:  Build and Push frontend image to AWS ECR
-  #   defaults:
-  #     run:
-  #       working-directory: front
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v2
-  #   - name: Configure AWS credentials
-  #     uses: aws-actions/configure-aws-credentials@v1
-  #     with:
-  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-  #   - name: Login to Amazon ECR
-  #     id: login-ecr
-  #     uses: aws-actions/amazon-ecr-login@v1
-  #   - name: Build, tag, and push image to Amazon ECR
-  #     id: build-image
-  #     env:
-  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-  #         ECR_REPOSITORY: epamapp-front
-  #         IMAGE_TAG: ${{ github.sha }}
-  #     run: |
-  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
-  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
-  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        continue-on-error: true
+      
+      - name: send message to tg
+        if: ${{ failure() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ${{ github.actor }} created commit:
+            *Commit message:* ${{ github.event.commits[0].message }}
+            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+            *Action:* ${{ env.ACTION }}
+            *Status:* ${{ job.status }}
+          format: "markdown"
+          disable_web_page_preview: true
 
-  #   - name: send message to tg
-  #     if: ${{ failure() }}
-  #     uses: appleboy/telegram-action@master
-  #     with:
-  #       to: ${{ secrets.TELEGRAM_TO }}
-  #       token: ${{ secrets.TELEGRAM_TOKEN }}
-  #       message: |
-  #         ${{ github.actor }} created commit:
-  #         *Commit message:* ${{ github.event.commits[0].message }}
-  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-  #         *Action:* ${{ env.ACTION }}
-  #         *Status:* ${{ job.status }}
-  #       format: "markdown"
-  #       disable_web_page_preview: true
+
+  deployaws:
+    needs: deploys3
+    name: deploying aws with terraform 
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: init
+    env:
+      ACTION: Deploy AWS infrastructure with Terraform
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform init
+        run: terraform init
+           
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        id: plan
+        run: terraform plan
+        continue-on-error: true
+
+      # - name: Terraform Plan Status
+        # if: steps.plan.outcome == 'failure'
+        # run: exit 1
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      - name: send message to tg
+        if: ${{ failure() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ${{ github.actor }} created commit:
+            *Commit message:* ${{ github.event.commits[0].message }}
+            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+            *Action:* ${{ env.ACTION }}
+            *Status:* ${{ job.status }}
+          format: "markdown"
+          disable_web_page_preview: true
+        
+  buiildpushback:
+    needs: deployaws
+    env:
+      ACTION: Build and Push backend image to AWS ECR
+    name:  Build and Push backend image to AWS ECR
+    defaults:
+      run:
+        working-directory: back
+    runs-on: self-hosted
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: epamapp-back
+          IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+
+  buiildpushfront:
+    needs: deployaws
+    env:
+      ACTION:  Build and Push frontend image to AWS ECR
+    name:  Build and Push frontend image to AWS ECR
+    defaults:
+      run:
+        working-directory: front
+    runs-on: self-hosted
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: epamapp-front
+          IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+
+  deploytokube:
+    needs: [buiildpushfront,buiildpushback]
+    # needs: deployaws
+    env:
+      ACTION: Deploy images from ECR to kube with helm
+    name: Deploy images from ECR to kube with helm
+    defaults:
+      run:
+        working-directory: deployk8s
+    runs-on: self-hosted
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Update creditials for kuber
+      run: |
+        aws eks update-kubeconfig --name "epam-py-cluster"
+    - name: Configure Kubeconfig
+      id: kube_config_data
+      run: |
+        echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    - name: Deploy to EKS
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        aws eks update-kubeconfig --name "epam-py-cluster"
+        kubectl config current-context
+
+    # - name: Install/upgrade helm chart
+    #   env:
+    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    #   run:
+    #     helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml
+    # # --set container.image=${{ steps.login-ecr.outputs.registry }} \
+    
+    - name: Install/upgrade helm chart (NEW)
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
+        echo $dbhostdescribe
+        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
+    - name: Show our app resources in ${GITHUB_REF_NAME} namespace
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+      run: |
+        kubectl get all -o wide -n ${GITHUB_REF_NAME}
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+
+
+  dashboard:
+    needs: deploytokube
+    env:
+      ACTION: Deploy dashboatd and metrics
+    name: Deploy dashboatd and metrics
+    defaults:
+      run:
+        working-directory: deployk8s
+    runs-on: self-hosted
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1  
+    - name: Update creditials for kuber
+      run: |
+        aws eks update-kubeconfig --name "epam-py-cluster"
+    - name: Configure Kubeconfig
+      id: kube_config_data
+      run: |
+        echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    - name: Get admin permissions
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        kubectl apply -f admin.yaml
+    # - name: Setting up dashboard 
+    #   run: |
+    #     kubectl apply -f dashboard.yaml
+    ## kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
+    ## kubectl proxy
+    ## dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
+    - name: Setting up metrics
+      run: |
+        kubectl apply -f metrics-server.yaml   
+
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+
+  monitoring:
+    needs: dashboard
+    env:
+      ACTION: Deploy cloudwatch monitoring with fluentd and store logs
+    name: Deploy cloudwatch monitoring with fluentd and store logs
+    defaults:
+      run:
+        working-directory: deployk8s
+    runs-on: self-hosted
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1  
+    - name: Update creditials for kuber
+      run: |
+        aws eks update-kubeconfig --name "epam-py-cluster"
+    - name: Configure Kubeconfig
+      id: kube_config_data
+      run: echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    - name: apply cloudwatch with fluentd
+      env:
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}    
+      run: |
+        kubectl apply -f cloudwatch
+
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
+
+
+
+    
+     
+
+
+
+
+
 
 
   # cleandocker:
