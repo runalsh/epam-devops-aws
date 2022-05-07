@@ -117,7 +117,9 @@ write_files:
 
 
 package_update: true
+
 package_upgrade: true
+
 packages:
  - yum-utils
  - curl
@@ -136,13 +138,32 @@ packages:
  - amazon-cloudwatch-agent
  
 ssh_authorized_keys:
- - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAr53uTiK0O/sbacgMcsHGp2mL0XvjpxI9O6n2KOPduFbmwKF/ZxLZm6nR1K6Dkj5aeg+BEFft1lrkh08ubJCYkF7/5vXy5dlzlLokCwc3aEOIIxD2WsOaFizmiy/b3KE16bvpkM7WzydlW6LyTaF3BoAikiw5D5IibroSij2mFWGVieXxXJSyryu+xmsNqGywuKc+4DjoaqEJJooBU53OdTkg8RGeN4dCrEWbJIc7agl5MDaBpL8aO6vH4OuGM7u3UFCTgDe6KRlK+bgYs4QEqb55RiNIp0vAOET4jH2QBhP489+5R1V6B/ozx2n0rDo3F3Hrha2Cp835KGoJVl2Gmw== rsa-key-20211028
-    
+  - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAr53uTiK0O/sbacgMcsHGp2mL0XvjpxI9O6n2KOPduFbmwKF/ZxLZm6nR1K6Dkj5aeg+BEFft1lrkh08ubJCYkF7/5vXy5dlzlLokCwc3aEOIIxD2WsOaFizmiy/b3KE16bvpkM7WzydlW6LyTaF3BoAikiw5D5IibroSij2mFWGVieXxXJSyryu+xmsNqGywuKc+4DjoaqEJJooBU53OdTkg8RGeN4dCrEWbJIc7agl5MDaBpL8aO6vH4OuGM7u3UFCTgDe6KRlK+bgYs4QEqb55RiNIp0vAOET4jH2QBhP489+5R1V6B/ozx2n0rDo3F3Hrha2Cp835KGoJVl2Gmw== rsa-key-20211028
+
 runcmd:
   - curl https://freedns.afraid.org/dynamic/update.php?U2NnUkQ5TlYydkk0Wm5UeEVRT0c6MTk3NTIyNDc=
+  - timedatectl set-timezone Europe/Moscow
+
+# configure cloudwatch
+  - mkdir -p /usr/share/collectd
+  - touch /usr/share/collectd/types.db
+  - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:AmazonCloudWatch-linux -s
+  - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/config.json
+  - systemctl enable amazon-cloudwatch-agent
+  - systemctl restart amazon-cloudwatch-agent
+
+# install and configure runner
+  - mkdir actions-runner && cd actions-runner
+  - curl -o actions-runner-linux-x64-2.291.1.tar.gz -L https://github.com/actions/runner/releases/download/v2.291.1/actions-runner-linux-x64-2.291.1.tar.gz
+  - echo "1bde3f2baf514adda5f8cf2ce531edd2f6be52ed84b9b6733bf43006d36dcd4c  actions-runner-linux-x64-2.291.1.tar.gz" | shasum -a 256 -c
+  - tar xzf ./actions-runner-linux-x64-2.291.1.tar.gz
+  - export RUNNER_ALLOW_RUNASROOT="1"
+  - ./config.sh --url https://github.com/runalsh/epam_again_aws --token AFBAYCNZACV4RO7MIHFBD23CO3J3M
+  - ./svc.sh install
+  - ./svc.sh start
 
 # pip install
-  - curl wget https://bootstrap.pypa.io/get-pip.py
+  - wget https://bootstrap.pypa.io/get-pip.py
   - python3 get-pip.py
 
 # install terraform
@@ -156,24 +177,7 @@ runcmd:
 # install kubectl
   - curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
   - chmod +x ./kubectl
-  - sudo mv ./kubectl /usr/local/bin/kubectl
-
-# configure cloudwatch
-  - mkdir -p /usr/share/collectd
-  - touch /usr/share/collectd/types.db
-  - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:AmazonCloudWatch-linux -s
-  - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/config.json
-  - systemctl enable amazon-cloudwatch-agent
-  - systemctl restart amazon-cloudwatch-agent
+  - sudo mv ./kubectl /usr/bin/kubectl
 
 
-# install and configure github runner
-  - mkdir actions-runner && cd actions-runner
-  - curl -o actions-runner-linux-x64-2.291.1.tar.gz -L https://github.com/actions/runner/releases/download/v2.291.1/actions-runner-linux-x64-2.291.1.tar.gz
-  - echo "1bde3f2baf514adda5f8cf2ce531edd2f6be52ed84b9b6733bf43006d36dcd4c  actions-runner-linux-x64-2.291.1.tar.gz" | shasum -a 256 -c
-  - tar xzf ./actions-runner-linux-x64-2.291.1.tar.gz
-  - export RUNNER_ALLOW_RUNASROOT="1"
-  - ./config.sh --url https://github.com/runalsh/epam_again_aws --token AFBAYCIMSSTML2LTTPMMI6DCO3G6W
-  - ./svc.sh install
-  - ./svc.sh start
 
