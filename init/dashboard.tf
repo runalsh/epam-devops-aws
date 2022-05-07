@@ -267,25 +267,8 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
                 "view": "timeSeries",
                 "stacked": true
             }
-        },
-        {
-            "type": "metric",
-            "x": 0,
-            "y": 6,
-            "width": 9,
-            "height": 5,
-            "properties": {
-                "view": "singleValue",
-                "stacked": false,
-                "metrics": [
-                    [ "CWAgent", "disk_used_percent", "InstanceId", "i-05ef9c45f7896e3d3", { "region": "eu-central-1" } ],
-                    [ "CWAgent", "mem_used_percent", "InstanceId", "i-05ef9c45f7896e3d3", { "region": "eu-central-1" } ],
-                    [ "CWAgent", "cpu_usage_system", "InstanceId", "i-05ef9c45f7896e3d3", { "region": "eu-central-1" } ]
-                ],
-                "region": "eu-central-1",
-                "title": "GITHUB RUNNER",
-                "period": 300
-            }
         }
     ]
+    }
+  EOF  
 }

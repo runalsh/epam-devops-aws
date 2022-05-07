@@ -224,7 +224,7 @@ resource "aws_route_table_association" "vpc_runner_route_assoc" {
 ### =======================c  cloudwatch
 
 resource "aws_cloudwatch_log_group" "runner-logs" {
-  name              = "/aws/eks/${var.runnername}/"
+  name              = "/aws/ec2/${var.runnername}/"
   retention_in_days = 3
 }
 
@@ -236,48 +236,55 @@ resource "aws_cloudwatch_log_stream" "runner-logs-stream" {
 resource "aws_cloudwatch_metric_alarm" "cpu_high_runner" {
   alarm_name          = "${var.runnername}-cpu_utilization_high"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
+  evaluation_periods  = "1"
   metric_name         = "CPUUtilization"
-  namespace           = "CWAgent"
-  period              = "30"
+  namespace           = "AWS/EC2"
+  period              = "60"
   statistic           = "Average"
   threshold           = "80"
+  insufficient_data_actions = []
+  alarm_actions = ["${aws_sns_topic.alarmrunner.arn}"]
 
     dimensions = {
         InstanceId = aws_instance.runner.id
     }
+}
 
+resource "aws_cloudwatch_metric_alarm" "mem_high_runner" {
+  alarm_name          = "${var.runnername}-mem_utilization_high"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "mem_used_percent"
+  namespace           = "CWAgent"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "80"
+  insufficient_data_actions = []
   alarm_actions = ["${aws_sns_topic.alarmrunner.arn}"]
+
+    dimensions = {
+        InstanceId = aws_instance.runner.id
+    }
 }
 
 resource "aws_cloudwatch_metric_alarm" "disk_low_runner" {
   alarm_name        = "${var.runnername}-low-disk-alarm"
-  alarm_description = "Alerts on disk space lower on 1gb"
+  alarm_description = "Alerts on disk space lower 10%"
 
-  // Metric
-  namespace   = "CWAgent"
-  metric_name = "disk_inodes_free"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  threshold                 = "90"
+  evaluation_periods        = "1"
+  period                    = "60"
+  statistic                 = "Average"
+  namespace                 = "CWAgent"
+  metric_name               = "disk_used_percent"
+  insufficient_data_actions = []
+  alarm_actions = ["${aws_sns_topic.alarmrunner.arn}"]
 
   dimensions = {
         InstanceId = aws_instance.runner.id
-        path          = "/"
-        device        = "xvda1"
-        fstype        = "xfs"
     }
-
-  // For every minute
-  evaluation_periods = "1"
-  period             = "60"
-
-  // If totals 1gb or lower (in bytes)
-  statistic           = "Minimum"
-  comparison_operator = "LessThanOrEqualToThreshold"
-  threshold           = "1000000000"
-  datapoints_to_alarm = 1
-
-    alarm_actions = ["${aws_sns_topic.alarmrunner.arn}"]
 }
-
 
 resource "aws_sns_topic" "alarmrunner" {
   name            = "${var.prefix}-runner-alarms"
@@ -330,7 +337,7 @@ resource "aws_instance" "runner" {
     key_name                = var.key_name2
     iam_instance_profile  = "${aws_iam_instance_profile.runner_profile.name}"
 
-
+    user_data_replace_on_change =  true
     user_data = data.template_cloudinit_config.cloudinit_config.rendered
 
     # lifecycle {
@@ -355,3 +362,4 @@ data "template_cloudinit_config" "cloudinit_config" {
     content      = data.template_file.cloudinit_main.rendered
   }
 }
+

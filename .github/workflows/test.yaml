@@ -60,7 +60,7 @@ jobs:
   checkenv:
     runs-on: self-hosted
     steps:  
-        - uses: FranzDiebold/github-env-vars-action@v2.3.1
+        - uses: FranzDiebold/github-env-vars-action@v1
         - name: Print environment variables
           env:
             ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'

@@ -1,10 +1,10 @@
 #cloud-config
 write_files:
- - path: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-   owner: root:root
-   permissions: '0644'
+ - path: "/opt/aws/amazon-cloudwatch-agent/etc/config.json"
+   owner: "root:root"
+   permissions: "'0644"
    content: |
-    {
+        {
         "agent": {
                 "metrics_collection_interval": 60,
                 "run_as_user": "root"
@@ -14,10 +14,22 @@ write_files:
                         "files": {
                                 "collect_list": [
                                         {
-                                                "file_path": "/actions-runner/_diag/*",
-                                                "log_group_name": "/aws/eks/epam-py-runner/",
-                                                "log_stream_name": "{instance_id}",
-                                                "retention_in_days": 3
+                                        "file_path": "/actions-runner/_diag/*",
+                                        "log_group_name": "/aws/ec2/epam-py-runner/",
+                                        "log_stream_name": "{instance_id}-runner",
+                                        "retention_in_days": 3
+                                        },
+                                        {
+                                        "file_path": "/var/log/amazon/amazon-cloudwatch-agent/*",
+                                        "log_group_name": "/aws/ec2/epam-py-runner/",
+                                        "log_stream_name": "{instance_id}-cloudwatch-agent",
+                                        "retention_in_days": 3
+                                        },
+                                        {
+                                        "file_path": "/var/log/cloud-init*.log",
+                                        "log_group_name": "/aws/ec2/epam-py-runner/",
+                                        "log_stream_name": "{instance_id}-cloudinit",
+                                        "retention_in_days": 3
                                         }
                                 ]
                         }
@@ -30,10 +42,10 @@ write_files:
                         ]
                 ],
                 "append_dimensions": {
-                        "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
-                        "ImageId": "${aws:ImageId}",
-                        "InstanceId": "${aws:InstanceId}",
-                        "InstanceType": "${aws:InstanceType}"
+                        "AutoScalingGroupName": "$${aws:AutoScalingGroupName}",
+                        "ImageId": "$${aws:ImageId}",
+                        "InstanceId": "$${aws:InstanceId}",
+                        "InstanceType": "$${aws:InstanceType}"
                 },
                 "metrics_collected": {
                         "collectd": {
@@ -98,28 +110,36 @@ write_files:
                                         "swap_used_percent"
                                 ],
                                 "metrics_collection_interval": 60
+                                }
                         }
                 }
         }
-    }
 
 
+package_update: true
+package_upgrade: true
+packages:
+ - curl
+ - mc
+ - tar
+ - wget
+ - nano
+ - nmon
+ - ncdu
+ - net-tools
+ - amazon-cloudwatch-agent
 
+ssh_authorized_keys:
+ - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAr53uTiK0O/sbacgMcsHGp2mL0XvjpxI9O6n2KOPduFbmwKF/ZxLZm6nR1K6Dkj5aeg+BEFft1lrkh08ubJCYkF7/5vXy5dlzlLokCwc3aEOIIxD2WsOaFizmiy/b3KE16bvpkM7WzydlW6LyTaF3BoAikiw5D5IibroSij2mFWGVieXxXJSyryu+xmsNqGywuKc+4DjoaqEJJooBU53OdTkg8RGeN4dCrEWbJIc7agl5MDaBpL8aO6vH4OuGM7u3UFCTgDe6KRlK+bgYs4QEqb55RiNIp0vAOET4jH2QBhP489+5R1V6B/ozx2n0rDo3F3Hrha2Cp835KGoJVl2Gmw== rsa-key-20211028
 
     
 runcmd:
-  # - mkdir /root/.ssh/
-  # - echo "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAr53uTiK0O/sbacgMcsHGp2mL0XvjpxI9O6n2KOPduFbmwKF/ZxLZm6nR1K6Dkj5aeg+BEFft1lrkh08ubJCYkF7/5vXy5dlzlLokCwc3aEOIIxD2WsOaFizmiy/b3KE16bvpkM7WzydlW6LyTaF3BoAikiw5D5IibroSij2mFWGVieXxXJSyryu+xmsNqGywuKc+4DjoaqEJJooBU53OdTkg8RGeN4dCrEWbJIc7agl5MDaBpL8aO6vH4OuGM7u3UFCTgDe6KRlK+bgYs4QEqb55RiNIp0vAOET4jH2QBhP489+5R1V6B/ozx2n0rDo3F3Hrha2Cp835KGoJVl2Gmw== rsa-key-20211028"  > /root/.ssh/authorized_keys2
-  - yum update -y
-  - yum upgrade -y
-  - yum install -y curl tar
-
-  - yum install -y amazon-cloudwatch-agent
+  - curl https://freedns.afraid.org/dynamic/update.php?U2NnUkQ5TlYydkk0Wm5UeEVRT0c6MTk3NTIyNDc=
+#   - yum install -y amazon-cloudwatch-agent
   - mkdir -p /usr/share/collectd
   - touch /usr/share/collectd/types.db
   - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:AmazonCloudWatch-linux -s
-  - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
-  # - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/config.json
   - systemctl enable amazon-cloudwatch-agent
   - systemctl restart amazon-cloudwatch-agent
 
@@ -128,7 +148,7 @@ runcmd:
   - echo "1bde3f2baf514adda5f8cf2ce531edd2f6be52ed84b9b6733bf43006d36dcd4c  actions-runner-linux-x64-2.291.1.tar.gz" | shasum -a 256 -c
   - tar xzf ./actions-runner-linux-x64-2.291.1.tar.gz
   - export RUNNER_ALLOW_RUNASROOT="1"
-  - ./config.sh --url https://github.com/runalsh/epam_again_aws --token AFBAYCLO63ZBAS2NKUE6FGLCOPRC4()()()
+  - ./config.sh --url https://github.com/runalsh/epam_again_aws --token AFBAYCIWYH2GDJFIGAQJOR3CO2MMY
   - ./svc.sh install
   - ./svc.sh start
 
