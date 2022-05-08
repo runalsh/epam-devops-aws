@@ -425,7 +425,7 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
     - name: Update creditials for kuber
       run: |
-        aws eks update-kubeconfig --name "epam-py-cluster"
+        aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
     - name: Install/upgrade helm chart (NEW)
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -475,7 +475,7 @@ jobs:
         aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
     - name: Update creditials for kuber
       run: |
-        aws eks update-kubeconfig --name "epam-py-cluster"
+        aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
     - name: Get admin permissions
       run: |
         kubectl apply -f admin.yaml
