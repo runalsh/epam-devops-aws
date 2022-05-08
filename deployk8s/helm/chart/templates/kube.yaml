@@ -150,14 +150,14 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: external-dns
+  name: external-dns-{{ .Values.namespace }}
   # annotations:
   #   eks.amazonaws.com/role-arn: arn:aws:iam::619357854683:policy/routepolicy
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: external-dns
+  name: external-dns-{{ .Values.namespace }}
 rules:
 - apiGroups: [""]
   resources: ["services","endpoints","pods"]
@@ -172,36 +172,36 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: external-dns-viewer
+  name: external-dns-viewer-{{ .Values.namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: external-dns
+  name: external-dns-{{ .Values.namespace }}
 subjects:
 - kind: ServiceAccount
-  name: external-dns
+  name: external-dns-{{ .Values.namespace }}
   namespace: default
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: external-dns
+  name: external-dns-{{ .Values.namespace }}
 spec:
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: external-dns
+      app: external-dns-{{ .Values.namespace }}
   template:
     metadata:
       labels:
-        app: external-dns
+        app: external-dns-{{ .Values.namespace }}
       # annotations:
       #   iam.amazonaws.com/role: arn:aws:iam::619357854683:policy/routepolicy
     spec:
-      serviceAccountName: external-dns
+      serviceAccountName: external-dns-{{ .Values.namespace }}
       containers:
-      - name: external-dns
+      - name: external-dns-{{ .Values.namespace }}
         image: k8s.gcr.io/external-dns/external-dns:v0.11.0
         args:
         - --source=service
