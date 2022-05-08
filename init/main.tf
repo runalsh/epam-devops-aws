@@ -438,9 +438,9 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   statistic           = "Average"
   threshold           = "80"
 
-  # dimensions = {
-  #   ClusterName = "${aws_eks_cluster.eks_cluster.name}"
-  # }
+  dimensions = {
+    ClusterName = "${aws_eks_cluster.eks_cluster.name}"
+  }
 
   alarm_actions = ["${aws_sns_topic.alarm.arn}"]
 }
@@ -504,65 +504,65 @@ resource "aws_sns_topic" "alarm" {
 
 ##=============================EKS
 
-# resource "aws_eks_cluster" "eks_cluster" {
-#   name     = var.clustername
-#   role_arn = aws_iam_role.eks-cluster.arn
-#   version    = "1.22"
-#   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+resource "aws_eks_cluster" "eks_cluster" {
+  name     = var.clustername
+  role_arn = aws_iam_role.eks-cluster.arn
+  version    = "1.22"
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-#   vpc_config {
-#     # endpoint_private_access = true
-#     # endpoint_public_access  = true
-#     security_group_ids = [aws_security_group.cluster_sg.id]
-#     subnet_ids = aws_subnet.subnets[*].id
-#   }
-#   depends_on = [
-#      aws_iam_role_policy_attachment.eks-cluster-policy,
-#      aws_iam_role_policy_attachment.eks-vpc-policy,
-#      aws_cloudwatch_log_group.eks-logs
-#   ]
-# }
+  vpc_config {
+    # endpoint_private_access = true
+    # endpoint_public_access  = true
+    security_group_ids = [aws_security_group.cluster_sg.id]
+    subnet_ids = aws_subnet.subnets[*].id
+  }
+  depends_on = [
+     aws_iam_role_policy_attachment.eks-cluster-policy,
+     aws_iam_role_policy_attachment.eks-vpc-policy,
+     aws_cloudwatch_log_group.eks-logs
+  ]
+}
 
-# resource "aws_eks_node_group" "nodes" {
-#   cluster_name    = aws_eks_cluster.eks_cluster.name
-#   node_group_name = "nodes"
-#   node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
-#   subnet_ids      = aws_subnet.subnets[*].id
-#   scaling_config {
-#     desired_size = var.desirednumberofnodes
-#     max_size     = var.maxnumberofnodes
-#     min_size     = var.minnumberofnodes
-#   }
+resource "aws_eks_node_group" "nodes" {
+  cluster_name    = aws_eks_cluster.eks_cluster.name
+  node_group_name = "nodes"
+  node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
+  subnet_ids      = aws_subnet.subnets[*].id
+  scaling_config {
+    desired_size = var.desirednumberofnodes
+    max_size     = var.maxnumberofnodes
+    min_size     = var.minnumberofnodes
+  }
 
-# #    remote_access {
-# #      ec2_ssh_key = var.key_name2
-# #     source_security_group_ids = [aws_security_group.sg_main.id]
-# #    }
+#    remote_access {
+#      ec2_ssh_key = var.key_name2
+#     source_security_group_ids = [aws_security_group.sg_main.id]
+#    }
 
-#   disk_size            = 8
-#   # capacity_type        = "ON_DEMAND"
-#   capacity_type        = "SPOT"
-#   force_update_version = false
-#   instance_types       = [var.clusternode_type]
-#   ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
-#   labels               = {
-#     role = "nodes"
-#   }
+  disk_size            = 8
+  # capacity_type        = "ON_DEMAND"
+  capacity_type        = "SPOT"
+  force_update_version = false
+  instance_types       = [var.clusternode_type]
+  ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
+  labels               = {
+    role = "nodes"
+  }
 
-#   depends_on = [
-#     aws_iam_role_policy_attachment.eks-worker-node-policy,
-#     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
-#     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
-#     aws_iam_role_policy_attachment.cloudwatch-logs-full-access
-#     # aws_iam_role_policy_attachment.route53_modify_policy
-#   ]
-# }
+  depends_on = [
+    aws_iam_role_policy_attachment.eks-worker-node-policy,
+    aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
+    aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
+    aws_iam_role_policy_attachment.cloudwatch-logs-full-access
+    aws_iam_role_policy_attachment.route53_modify_policy
+  ]
+}
 
-# provider "kubernetes" {
-#   host                   = data.aws_eks_cluster.eks_cluster.endpoint
-#   token                  = data.aws_eks_cluster_auth.eks_cluster.token
-#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
-# }
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.eks_cluster.endpoint
+  token                  = data.aws_eks_cluster_auth.eks_cluster.token
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
+}
 
 
 #=========  RUNNER  ======================
