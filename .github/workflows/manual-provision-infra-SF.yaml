@@ -430,6 +430,7 @@ jobs:
         AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
       run: |
         aws eks update-kubeconfig --region ${{ secrets.AWS_DEFAULT_REGION }} --name "epam-py-cluster"
+        kubectl get all
     # - name: Configure Kubeconfig
     #   id: kube_config_data
     #   run: |
