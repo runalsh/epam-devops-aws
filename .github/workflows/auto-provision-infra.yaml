@@ -424,6 +424,11 @@ jobs:
       id: kube_config_data
       run: |
         echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    
+    - uses: azure/setup-kubectl@v2.0
+      with:
+        version: 'v1.23.6'
+    
     - name: Deploy to EKS
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
@@ -431,14 +436,6 @@ jobs:
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster"
         kubectl config current-context
-
-    # - name: Install/upgrade helm chart
-    #   env:
-    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-    #   run:
-    #     helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml
-    # # --set container.image=${{ steps.login-ecr.outputs.registry }} \
     
     - name: Install/upgrade helm chart (NEW)
       env:
@@ -449,6 +446,11 @@ jobs:
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
         echo $dbhostdescribe
         helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
+    
+    - uses: azure/setup-kubectl@v2.0
+      with:
+        version: 'v1.23.6'
+    
     - name: Show our app resources in ${GITHUB_REF_NAME} namespace
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
@@ -499,6 +501,11 @@ jobs:
       id: kube_config_data
       run: |
         echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    
+    - uses: azure/setup-kubectl@v2.0
+      with:
+        version: 'v1.23.6'
+
     - name: Get admin permissions
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
@@ -558,6 +565,11 @@ jobs:
     - name: Configure Kubeconfig
       id: kube_config_data
       run: echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    
+    - uses: azure/setup-kubectl@v2.0
+      with:
+        version: 'v1.23.6'
+    
     - name: apply cloudwatch with fluentd
       env:
         KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
