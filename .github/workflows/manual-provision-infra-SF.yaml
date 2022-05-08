@@ -1,33 +1,29 @@
-name: auto provision infrastructure
-on:
-  push:
-    branches: [ prod ]
-    paths-ignore:
-      - '*.md'
-      # - 'back/**'
-      # - 'front/**'
-    #  - '.github/workflows/**'
-  pull_request:
-    branches: [ prod ]
-    paths-ignore:
-      - '*.md'
-      # - 'back/**'
-      # - 'front/**'
-     # - '.github/workflows/**'
-
+name: manual provision infra SF
+on: [workflow_dispatch, workflow_call]
 
 jobs:
+  update-os:
+    runs-on: self-hosted
+    env:
+      ACTION: Update system
+    steps:
+      - name: Update
+        run: |
+          sudo yum update -y
+          sudo yum upgrade -y
+
   pytest:
-    runs-on: ubuntu-latest
+    needs: update-os
+    runs-on: self-hosted
     env:
       ACTION: Test Pytest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-        cache: "pip"
+    # - name: Set up Python 3.8
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: 3.8
+    #     cache: "pip"
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
@@ -71,18 +67,19 @@ jobs:
     #     body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
  
   # bandit:
-  #   runs-on: ubuntu-latest
+  #   runs-on: self-hosted
+  #   needs: update-os
   #   env:
   #     ACTION: Test Bandit test
   #   steps:
   #   - uses: actions/checkout@v2
-  #   - name: Set up Python 3.8
+  #   - name: Set up Python 3.9
   #     uses: actions/setup-python@v2
   #     with:
-  #       python-version: 3.8
+  #       python-version: 3.9
   #   - name: Install dependencies
   #     run: |
-  #       python3 -m pip install --upgrade pip
+  #       python -m pip install --upgrade pip
   #       pip install bandit
   #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
   #   - name: analyze source code with bandit back app
@@ -109,7 +106,8 @@ jobs:
   #       disable_web_page_preview: true
     
   sonarcloud:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    needs: update-os
     steps:
     - uses: actions/checkout@v2
       with:
@@ -138,15 +136,16 @@ jobs:
         disable_web_page_preview: true
 
   pylint:
-    runs-on: ubuntu-latest 
+    runs-on: self-hosted
+    needs: update-os
     env:
       ACTION: Test Linter check
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
+    # - name: Set up Python 3.9
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: 3.9
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
@@ -178,7 +177,7 @@ jobs:
         disable_web_page_preview: true
         
   #  checkenv:
-  #   runs-on: ubuntu-latest
+  #   runs-on: self-hosted
   #   steps:
   #       - uses: FranzDiebold/github-env-vars-action@v2.3.1
   #       - name: Print environment variables
@@ -199,7 +198,7 @@ jobs:
   deploys3:
     needs: [pytest, pylint, sonarcloud]
     name: deploying S3 buckets
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: s3
@@ -212,6 +211,9 @@ jobs:
     steps:
       - name: Checkout 
         uses: actions/checkout@v2
+
+      - name: Setup Nodejs
+        uses: actions/setup-node@v1  
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -250,7 +252,7 @@ jobs:
   deployaws:
     needs: deploys3
     name: deploying aws with terraform 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: init
@@ -262,6 +264,9 @@ jobs:
     steps:
       - name: Checkout 
         uses: actions/checkout@v2
+
+      - name: Setup Nodejs
+        uses: actions/setup-node@v1    
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -308,7 +313,7 @@ jobs:
     defaults:
       run:
         working-directory: back
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -356,7 +361,7 @@ jobs:
     defaults:
       run:
         working-directory: front
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -405,7 +410,7 @@ jobs:
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -480,7 +485,7 @@ jobs:
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -540,7 +545,7 @@ jobs:
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -591,3 +596,16 @@ jobs:
 
 
 
+
+
+  cleandocker:
+    runs-on: self-hosted
+    if: ${{ always() }}
+    needs: [sonarcloud,buiildpushfront,buiildpushback]
+    env:
+      ACTION:  Clean builded images for save space
+    steps:
+      - name: Run docker rmi
+        run: |
+          docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | grep -v "^amazon" | awk '{print $3}') --force
+        continue-on-error: true

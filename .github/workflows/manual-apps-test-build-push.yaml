@@ -1,6 +1,5 @@
 name: manual apps test\build\push
-on:
-  workflow_dispatch:
+on: [workflow_dispatch, workflow_call]
 
 jobs:
   pytest:
