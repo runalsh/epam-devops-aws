@@ -1,4 +1,4 @@
-name: destroy infrastructure
+name: manual destroy infrastructure
 on:
   workflow_dispatch:
 

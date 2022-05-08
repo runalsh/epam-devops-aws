@@ -1,4 +1,4 @@
-name: destroy runner
+name: manual destroy runner
 on:
   workflow_dispatch:
 

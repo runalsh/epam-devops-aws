@@ -1,3 +1,4 @@
+name: manual apps test\build\push
 on:
   workflow_dispatch:
 

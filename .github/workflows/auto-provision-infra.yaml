@@ -1,3 +1,4 @@
+name: auto provision infrastructure
 on:
   push:
     branches: [ prod ]
