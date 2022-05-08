@@ -434,6 +434,9 @@ jobs:
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
         echo $dbhostdescribe
         helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
+        aws --version
+        kubectl version --client
+        kubectl version
         kubectl get all
     # - name: Show our app resources in ${GITHUB_REF_NAME} namespace
     #   run: |
