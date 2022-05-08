@@ -51,19 +51,7 @@ resource "aws_key_pair" "generated_key_runner" {
 }
 
 #========== perm ============
-# locals {
-#   role_policy_arns = [
-#     "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM",
-#     "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-#   ]
-# }
 
-# resource "aws_iam_role_policy_attachment" "runner-policy" {
-#   count = length(local.role_policy_arns)
-
-#   role       = aws_iam_role.runner-iam-role.name
-#   policy_arn = element(local.role_policy_arns, count.index)
-# }
 
 resource "aws_iam_role_policy" "runner-iam-role-policy" {
   name = "${var.prefix}-EC2-Inline-Policy-runner"

@@ -1,4 +1,4 @@
-FROM python:3.9-alpine as base
+FROM python:3.8-alpine as base
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 FROM base as layer1

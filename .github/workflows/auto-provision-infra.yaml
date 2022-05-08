@@ -1,90 +1,46 @@
-on: [workflow_dispatch, workflow_call]
-jobs:
-  update-os:
-    runs-on: self-hosted
-    env:
-      ACTION: Update system
-    steps:
-      - name: Update
-        run: |
-          sudo yum update -y
-          sudo yum upgrade -y
+on:
+  push:
+    branches: [ prod ]
+    paths-ignore:
+      - '*.md'
+      # - 'back/**'
+      # - 'front/**'
+    #  - '.github/workflows/**'
+  pull_request:
+    branches: [ prod ]
+    paths-ignore:
+      - '*.md'
+      # - 'back/**'
+      # - 'front/**'
+     # - '.github/workflows/**'
 
-  pytest:
-    runs-on: self-hosted
-    env:
-      ACTION: Test Pytest
-    steps:
-    - uses: actions/checkout@v2
-    # - name: Set up Python 3.8
-    #   uses: actions/setup-python@v2
-    #   with:
-    #     python-version: 3.8
-    #     cache: "pip"
-    - name: Install dependencies
-      run: |
-        python3 -m pip install --upgrade pip
-        pip install pytest
-        pip install -r ./back/requirements.txt
-        pip install -r ./front/requirements.txt
-    - name: Test with pytest back app
-      working-directory: ./back
-      run: |
-        pytest
-    - name: Test with pytest front app
-      working-directory: ./front
-      run: |
-        pytest
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-            ${{ github.actor }} created commit:
-            *Commit message:* ${{ github.event.commits[0].message }}
-            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-            *Action:* ${{ env.ACTION }}
-            *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
-    # - name: Send Gmail notification
-    #   if: ${{ failure() }}
-    #   uses: dawidd6/action-send-mail@v3
-    #   with:
-    #     server_address: smtp.yandex.ru
-    #     server_port: 465
-    #     username: ${{secrets.YANDEX_MAIL_USERNAME}}
-    #     password: ${{secrets.YANDEX_MAIL_PASSWORD}}
-    #     subject: ${{ github.job }} job has ${{ job.status }}
-    #     to: ${{ secrets.MAIL_FOR_INFO }}
-    #     from: github action mailer
-    #     body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
- 
-  # bandit:
-  #   runs-on: self-hosted
+
+jobs:
+  # pytest:
+  #   runs-on: ubuntu-latest
   #   env:
-  #     ACTION: Test Bandit test
+  #     ACTION: Test Pytest
   #   steps:
   #   - uses: actions/checkout@v2
-  #   - name: Set up Python 3.9
+  #   - name: Set up Python 3.8
   #     uses: actions/setup-python@v2
   #     with:
-  #       python-version: 3.9
+  #       python-version: 3.8
+        # cache: "pip"
   #   - name: Install dependencies
   #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install bandit
-  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-  #   - name: analyze source code with bandit back app
+  #       python3 -m pip install --upgrade pip
+  #       pip install pytest
+  #       pip install -r ./back/requirements.txt
+  #       pip install -r ./front/requirements.txt
+  #   - name: Test with pytest back app
+  #     working-directory: ./back
   #     run: |
-  #       bandit -c ./back/bandit.yml -s B104,B608,B201,B101 -r ./back
-  #   - name: analyze source code with bandit front app
+  #       pytest
+  #   - name: Test with pytest front app
+  #     working-directory: ./front
   #     run: |
-  #       bandit -c ./front/bandit.yml -s B104,B608,B201,B101 -r ./front  
-
+  #       pytest
   #   - name: send message to tg
   #     if: ${{ failure() }}
   #     uses: appleboy/telegram-action@master
@@ -100,78 +56,128 @@ jobs:
   #           *Status:* ${{ job.status }}
   #       format: "markdown"
   #       disable_web_page_preview: true
-    
-  sonarcloud:
-    runs-on: self-hosted
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: SonarCloud Scan
-      ## continue-on-error: true
-      uses: sonarsource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-            ${{ github.actor }} created commit:
-            *Commit message:* ${{ github.event.commits[0].message }}
-            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-            *Action:* ${{ env.ACTION }}
-            *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
+  #   # - name: Send Gmail notification
+  #   #   if: ${{ failure() }}
+  #   #   uses: dawidd6/action-send-mail@v3
+  #   #   with:
+  #   #     server_address: smtp.yandex.ru
+  #   #     server_port: 465
+  #   #     username: ${{secrets.YANDEX_MAIL_USERNAME}}
+  #   #     password: ${{secrets.YANDEX_MAIL_PASSWORD}}
+  #   #     subject: ${{ github.job }} job has ${{ job.status }}
+  #   #     to: ${{ secrets.MAIL_FOR_INFO }}
+  #   #     from: github action mailer
+  #   #     body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+ 
+  # # bandit:
+  # #   runs-on: ubuntu-latest
+  # #   env:
+  # #     ACTION: Test Bandit test
+  # #   steps:
+  # #   - uses: actions/checkout@v2
+  # #   - name: Set up Python 3.8
+  # #     uses: actions/setup-python@v2
+  # #     with:
+  # #       python-version: 3.8
+  # #   - name: Install dependencies
+  # #     run: |
+  # #       python3 -m pip install --upgrade pip
+  # #       pip install bandit
+  # #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  # #   - name: analyze source code with bandit back app
+  # #     run: |
+  # #       bandit -c ./back/bandit.yml -s B104,B608,B201,B101 -r ./back
+  # #   - name: analyze source code with bandit front app
+  # #     run: |
+  # #       bandit -c ./front/bandit.yml -s B104,B608,B201,B101 -r ./front  
 
-  pylint:
-    runs-on: self-hosted 
-    env:
-      ACTION: Test Linter check
-    steps:
-    - uses: actions/checkout@v2
-    # - name: Set up Python 3.9
-    #   uses: actions/setup-python@v2
-    #   with:
-    #     python-version: 3.9
-    - name: Install dependencies
-      run: |
-        python3 -m pip install --upgrade pip
-        pip install pylint 
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with pylint front app
-      working-directory: ./front
-      run: |
-        pylint --exit-zero $(ls -R | grep .py$ | xargs)
-    - name: Lint with pylint back app
-      working-directory: ./back
-      run: |
-        pylint --exit-zero $(ls -R | grep .py$ | xargs)    
+  # #   - name: send message to tg
+  # #     if: ${{ failure() }}
+  # #     uses: appleboy/telegram-action@master
+  # #     with:
+  # #       to: ${{ secrets.TELEGRAM_TO }}
+  # #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  # #       message: |
+  # #           ${{ github.actor }} created commit:
+  # #           *Commit message:* ${{ github.event.commits[0].message }}
+  # #           *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  # #           *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  # #           *Action:* ${{ env.ACTION }}
+  # #           *Status:* ${{ job.status }}
+  # #       format: "markdown"
+  # #       disable_web_page_preview: true
     
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-            ${{ github.actor }} created commit:
-            *Commit message:* ${{ github.event.commits[0].message }}
-            *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-            *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-            *Action:* ${{ env.ACTION }}
-            *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
+  # sonarcloud:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       fetch-depth: 0
+  #   - name: SonarCloud Scan
+  #     ## continue-on-error: true
+  #     uses: sonarsource/sonarcloud-github-action@master
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #           ${{ github.actor }} created commit:
+  #           *Commit message:* ${{ github.event.commits[0].message }}
+  #           *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #           *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #           *Action:* ${{ env.ACTION }}
+  #           *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
+
+  # pylint:
+  #   runs-on: ubuntu-latest 
+  #   env:
+  #     ACTION: Test Linter check
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Set up Python 3.8
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: 3.8
+  #   - name: Install dependencies
+  #     run: |
+  #       python3 -m pip install --upgrade pip
+  #       pip install pylint 
+  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  #   - name: Lint with pylint front app
+  #     working-directory: ./front
+  #     run: |
+  #       pylint --exit-zero $(ls -R | grep .py$ | xargs)
+  #   - name: Lint with pylint back app
+  #     working-directory: ./back
+  #     run: |
+  #       pylint --exit-zero $(ls -R | grep .py$ | xargs)    
+    
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #           ${{ github.actor }} created commit:
+  #           *Commit message:* ${{ github.event.commits[0].message }}
+  #           *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #           *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #           *Action:* ${{ env.ACTION }}
+  #           *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
         
   #  checkenv:
-  #   runs-on: self-hosted
+  #   runs-on: ubuntu-latest
   #   steps:
   #       - uses: FranzDiebold/github-env-vars-action@v2.3.1
   #       - name: Print environment variables
@@ -190,9 +196,9 @@ jobs:
   #           echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT"   
 
   deploys3:
-    needs: [pytest, pylint, sonarcloud]
+    # needs: [pytest, pylint, sonarcloud]
     name: deploying S3 buckets
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: s3
@@ -205,9 +211,6 @@ jobs:
     steps:
       - name: Checkout 
         uses: actions/checkout@v2
-
-      - name: Setup Nodejs
-        uses: actions/setup-node@v1  
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -246,7 +249,7 @@ jobs:
   deployaws:
     needs: deploys3
     name: deploying aws with terraform 
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: init
@@ -258,9 +261,6 @@ jobs:
     steps:
       - name: Checkout 
         uses: actions/checkout@v2
-
-      - name: Setup Nodejs
-        uses: actions/setup-node@v1    
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -307,7 +307,7 @@ jobs:
     defaults:
       run:
         working-directory: back
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -355,7 +355,7 @@ jobs:
     defaults:
       run:
         working-directory: front
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -404,7 +404,7 @@ jobs:
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -479,7 +479,7 @@ jobs:
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -539,7 +539,7 @@ jobs:
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -590,16 +590,3 @@ jobs:
 
 
 
-
-
-  cleandocker:
-    runs-on: self-hosted
-    if: ${{ always() }}
-    needs: [sonarcloud,buiildpushfront,buiildpushback]
-    env:
-      ACTION:  Clean builded images for save space
-    steps:
-      - name: Run docker rmi
-        run: |
-          docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | awk '{print $3}') --force
-        continue-on-error: true
