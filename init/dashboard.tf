@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
-  dashboard_name = "eks-cluster-application"
+  dashboard_name = "eks-cluster"
   dashboard_body = <<EOF
 
 {
