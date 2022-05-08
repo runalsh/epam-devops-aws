@@ -15,7 +15,6 @@ on:
       # - 'front/**'
      # - '.github/workflows/**'
 
-
 jobs:
   pytest:
     runs-on: ubuntu-latest
