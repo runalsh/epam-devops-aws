@@ -70,6 +70,7 @@ resource "aws_iam_role_policy" "runner-iam-role-policy" {
             "ec2:DescribeTags",
             "logs:PutLogEvents",
             "logs:DescribeLogStreams",
+            "eks:DescribeCluster",
             "cloudwatch:PutMetricData",
             "ssm:PutParameter"
           ],
@@ -79,6 +80,7 @@ resource "aws_iam_role_policy" "runner-iam-role-policy" {
     }
   )
 }
+
 
 resource "aws_iam_role" "runner-iam-role" {
   name = "${var.prefix}-runner-node"
