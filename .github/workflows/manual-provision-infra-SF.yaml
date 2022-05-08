@@ -449,17 +449,10 @@ jobs:
     - uses: azure/setup-kubectl@v2.0
       with:
         version: 'v1.23.6'
-    - name: check version    
-      env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-      run: |  
-        aws --version
-        kubectl version --client
-        kubectl version
-    
     - name: Install/upgrade helm chart (NEW)
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
