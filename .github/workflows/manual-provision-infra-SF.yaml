@@ -441,8 +441,6 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
     - name: Update creditials for kuber
       run: |
-        export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY }}
-        export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_KEY }}
         aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
     - name: Configure Kubeconfig
       id: kube_config_data
@@ -456,7 +454,7 @@ jobs:
       run: |
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
         echo $dbhostdescribe
-        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
+        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG --kubeconfig=/root/.kube/config 
     
     - name: Show our app resources in ${GITHUB_REF_NAME} namespace
       env:
