@@ -448,13 +448,13 @@ jobs:
         echo "::set-output name=KUBE_CONFIG_DATA::$(cat /root/.kube/config | base64)"
     - name: Install/upgrade helm chart (NEW)
       env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        KUBECONFIG : "/root/.kube/config"
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
         echo $dbhostdescribe
-        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG --kubeconfig=/root/.kube/config 
+        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
     
     - name: Show our app resources in ${GITHUB_REF_NAME} namespace
       env:
