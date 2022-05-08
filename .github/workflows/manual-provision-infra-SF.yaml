@@ -482,6 +482,7 @@ jobs:
     needs: deploytokube
     env:
       ACTION: Deploy dashboatd and metrics
+      KUBECONFIG : "/root/.kube/config"
     name: Deploy dashboatd and metrics
     defaults:
       run:
@@ -500,28 +501,20 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1    
     - name: Update creditials for kuber
-      env:
-        KUBECONFIG : "/root/.kube/config"
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
     - uses: azure/setup-kubectl@v2.0
       with:
         version: 'v1.23.6'
     - name: check version
-      env:
-        KUBECONFIG : "/root/.kube/config"
       run: |  
         aws --version
         kubectl version --client
         kubectl version
     - name: Get admin permissions
-      env:
-        KUBECONFIG : "/root/.kube/config"
       run: |
         kubectl apply -f admin.yaml
     - name: Setting up dashboard
-      env:
-        KUBECONFIG : "/root/.kube/config"
       run: |
         kubectl apply -f dashboard.yaml
     # kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
@@ -552,6 +545,7 @@ jobs:
   monitoring:
     needs: dashboard
     env:
+      KUBECONFIG : "/root/.kube/config"
       ACTION: Deploy cloudwatch monitoring with fluentd and store logs
     name: Deploy cloudwatch monitoring with fluentd and store logs
     defaults:
@@ -574,8 +568,6 @@ jobs:
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster"
     - name: apply cloudwatch with fluentd
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}    
       run: |
         kubectl apply -f cloudwatch
 
