@@ -430,21 +430,21 @@ jobs:
         AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
       run: |
         aws eks update-kubeconfig --region ${{ secrets.AWS_DEFAULT_REGION }} --name "epam-py-cluster"
-    - name: Configure Kubeconfig
-      id: kube_config_data
-      run: |
-        echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
-    - name: Deploy to EKS
-      env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-      run: |
-        aws eks update-kubeconfig --region ${{ secrets.AWS_DEFAULT_REGION }} --name "epam-py-cluster"
-        kubectl config set-context --current --namespace=default
-        kubectl config current-context
+    # - name: Configure Kubeconfig
+    #   id: kube_config_data
+    #   run: |
+    #     echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    # - name: Deploy to EKS
+    #   env:
+    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+    #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+    #   run: |
+    #     aws eks update-kubeconfig --region ${{ secrets.AWS_DEFAULT_REGION }} --name "epam-py-cluster"
+    #     kubectl config set-context --current --namespace=default
+    #     kubectl config current-context
 
     # - name: Install/upgrade helm chart
     #   env:
