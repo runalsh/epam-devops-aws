@@ -553,7 +553,7 @@ resource "aws_eks_node_group" "nodes" {
     aws_iam_role_policy_attachment.eks-worker-node-policy,
     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
-    aws_iam_role_policy_attachment.cloudwatch-logs-full-access
+    aws_iam_role_policy_attachment.cloudwatch-logs-full-access,
     aws_iam_role_policy_attachment.route53_modify_policy
   ]
 }
