@@ -440,8 +440,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
     - name: helm deploy
       uses: koslib/helm-eks-action@master
-      with:
-        run: |
+      run: |
           export KUBE_CONFIG_DATA=$(cat /home/root/.kube/config | base64)
           export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
           echo $dbhostdescribe
