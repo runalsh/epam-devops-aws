@@ -305,104 +305,104 @@ jobs:
   #         format: "markdown"
   #         disable_web_page_preview: true
         
-  buiildpushback:
-    # needs: deployaws
-    env:
-      ACTION: Build and Push backend image to AWS ECR
-    name:  Build and Push backend image to AWS ECR
-    defaults:
-      run:
-        working-directory: back
-    runs-on: self-hosted
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-back
-          IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+  # buiildpushback:
+  #   # needs: deployaws
+  #   env:
+  #     ACTION: Build and Push backend image to AWS ECR
+  #   name:  Build and Push backend image to AWS ECR
+  #   defaults:
+  #     run:
+  #       working-directory: back
+  #   runs-on: self-hosted
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1
+  #   - name: Build, tag, and push image to Amazon ECR
+  #     id: build-image
+  #     env:
+  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #         ECR_REPOSITORY: epamapp-back
+  #         IMAGE_TAG: ${{ github.sha }}
+  #     run: |
+  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
 
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          ${{ github.actor }} created commit:
-          *Commit message:* ${{ github.event.commits[0].message }}
-          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-          *Action:* ${{ env.ACTION }}
-          *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #         ${{ github.actor }} created commit:
+  #         *Commit message:* ${{ github.event.commits[0].message }}
+  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #         *Action:* ${{ env.ACTION }}
+  #         *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
 
-  buiildpushfront:
-    # needs: deployaws
-    env:
-      ACTION:  Build and Push frontend image to AWS ECR
-    name:  Build and Push frontend image to AWS ECR
-    defaults:
-      run:
-        working-directory: front
-    runs-on: self-hosted
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: epamapp-front
-          IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
+  # buiildpushfront:
+  #   # needs: deployaws
+  #   env:
+  #     ACTION:  Build and Push frontend image to AWS ECR
+  #   name:  Build and Push frontend image to AWS ECR
+  #   defaults:
+  #     run:
+  #       working-directory: front
+  #   runs-on: self-hosted
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1
+  #   - name: Build, tag, and push image to Amazon ECR
+  #     id: build-image
+  #     env:
+  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #         ECR_REPOSITORY: epamapp-front
+  #         IMAGE_TAG: ${{ github.sha }}
+  #     run: |
+  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest .
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:latest
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY-${GITHUB_REF_NAME}:$IMAGE_TAG
 
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          ${{ github.actor }} created commit:
-          *Commit message:* ${{ github.event.commits[0].message }}
-          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-          *Action:* ${{ env.ACTION }}
-          *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #         ${{ github.actor }} created commit:
+  #         *Commit message:* ${{ github.event.commits[0].message }}
+  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #         *Action:* ${{ env.ACTION }}
+  #         *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
 
   deploytokube:
-    needs: [buiildpushfront,buiildpushback]
+    # needs: [buiildpushfront,buiildpushback]
     # needs: deployaws
     env:
       ACTION: Deploy images from ECR to kube with helm
@@ -427,10 +427,10 @@ jobs:
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
     
-    - name: Configure Kubeconfig
-      id: kube_config_data
-      run: |
-        echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
+    # - name: Configure Kubeconfig
+    #   id: kube_config_data
+    #   run: |
+    #     echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
     
     - uses: azure/setup-kubectl@v2.0
       with:
@@ -438,11 +438,10 @@ jobs:
     
     - name: Deploy to EKS
       env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
+        # KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster"
-        kubectl config current-context
     
     - name: Install/upgrade helm chart (NEW)
       env:
