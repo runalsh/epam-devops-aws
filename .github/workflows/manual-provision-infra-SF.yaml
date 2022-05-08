@@ -436,8 +436,8 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run: |
         aws eks update-kubeconfig --region ${{ secrets.AWS_DEFAULT_REGION }} --name "epam-py-cluster"
-        kubectl config set-context --current --namespace=default
-        kubectl config current-context
+      # kubectl config set-context --current --namespace=default
+      # kubectl config current-context
 
     # - name: Install/upgrade helm chart
     #   env:
