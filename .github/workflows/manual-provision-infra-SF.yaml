@@ -2,15 +2,15 @@ name: manual provision infra SF
 on: [workflow_dispatch, workflow_call]
 
 jobs:
-  update-os:
-    runs-on: self-hosted
-    env:
-      ACTION: Update system
-    steps:
-      - name: Update
-        run: |
-          sudo yum update -y
-          sudo yum upgrade -y
+  # update-os:
+  #   runs-on: self-hosted
+  #   env:
+  #     ACTION: Update system
+  #   steps:
+  #     - name: Update
+  #       run: |
+  #         sudo yum update -y
+  #         sudo yum upgrade -y
 
   # pytest:
   #   needs: update-os
@@ -440,8 +440,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
     - name: helm deploy
       uses: koslib/helm-eks-action@master
-      with:
-        command: 
+      run: | 
           export KUBE_CONFIG_DATA=$(cat /root/.kube/config | base64)
           export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
           echo $dbhostdescribe
