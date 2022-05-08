@@ -1,17 +1,17 @@
 resource "aws_cloudwatch_dashboard" "runner-dashboard" {
   dashboard_name = "runner-dashboard"
   dashboard_body = <<EOF
-  {  
+  {
     "widgets": [
         {
-            "height": 6,
-            "width": 4,
+            "height": 3,
+            "width": 3,
             "y": 0,
-            "x": 10,
+            "x": 9,
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "CWAgent", "disk_used_percent", "InstanceId", "${aws_instance.runner.id}" ]
+                    [ "CWAgent", "disk_used_percent", "InstanceId", "${aws_instance.runner.id}", { "region": "eu-central-1" } ]
                 ],
                 "view": "singleValue",
                 "region": "eu-central-1",
@@ -22,7 +22,7 @@ resource "aws_cloudwatch_dashboard" "runner-dashboard" {
         },
         {
             "height": 6,
-            "width": 10,
+            "width": 9,
             "y": 0,
             "x": 0,
             "type": "metric",
@@ -42,7 +42,7 @@ resource "aws_cloudwatch_dashboard" "runner-dashboard" {
             "height": 6,
             "width": 9,
             "y": 0,
-            "x": 14,
+            "x": 15,
             "type": "metric",
             "properties": {
                 "metrics": [
@@ -69,8 +69,26 @@ resource "aws_cloudwatch_dashboard" "runner-dashboard" {
                 "title": "Log group: /aws/ec2/epam-py-runner/",
                 "view": "table"
             }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 0,
+            "width": 3,
+            "height": 3,
+            "properties": {
+                "metrics": [
+                    [ "CWAgent", "Running job" ]
+                ],
+                "view": "singleValue",
+                "stacked": false,
+                "region": "eu-central-1",
+                "period": 3600,
+                "stat": "Sum",
+                "title": "jobs last 1 hour"
+            }
         }
     ]
-    }
+}
    EOF 
 }
