@@ -462,6 +462,7 @@ jobs:
     - name: Install/upgrade helm chart (NEW)
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
