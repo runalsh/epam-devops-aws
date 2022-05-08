@@ -410,7 +410,7 @@ jobs:
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -423,91 +423,35 @@ jobs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-
-
-    - name: Test 
-      id: install-aws-cli
-      uses: unfor19/install-aws-cli-action@master
-      with:
-          version: 2
-    - run: |
-        aws eks --region eu-central-1  update-kubeconfig --name "epam-py-cluster" 
-      shell: bash
+    - name: Update creditials for kuber
+      run: |
+        aws eks update-kubeconfig --name "epam-py-cluster"
+    - name: Install/upgrade helm chart (NEW)
       env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-    - name: helm deploy
-      uses: koslib/helm-eks-action@master
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
+        echo $dbhostdescribe
+        helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
+    - name: Show our app resources in ${GITHUB_REF_NAME} namespace
+      run: |
+        kubectl get all -o wide -n ${GITHUB_REF_NAME}
+    - name: send message to tg
+      if: ${{ failure() }}
+      uses: appleboy/telegram-action@master
       with:
-        command: 
-          export KUBE_CONFIG_DATA=$(cat /root/.kube/config | base64) &&
-          export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address') &&
-          echo $dbhostdescribe &&
-          helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
-
-    # - name: Update creditials for kuber
-    #   env:
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-    #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-    #   run: |
-    #     aws eks update-kubeconfig --region ${{ secrets.AWS_DEFAULT_REGION }} --name "epam-py-cluster"
-    #     kubectl get all
-    # - name: Configure Kubeconfig
-    #   id: kube_config_data
-    #   run: |
-    #     echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
-    # - name: Deploy to EKS
-    #   env:
-    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-    #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-    #   run: |
-    #     aws eks update-kubeconfig --region ${{ secrets.AWS_DEFAULT_REGION }} --name "epam-py-cluster"
-    #     kubectl config set-context --current --namespace=default
-    #     kubectl config current-context
-
-    # - name: Install/upgrade helm chart
-    #   env:
-    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-    #   run:
-    #     helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml
-    # # --set container.image=${{ steps.login-ecr.outputs.registry }} \
-    
-    # - name: Install/upgrade helm chart (NEW)
-    #   env:
-    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-    #     IMAGE_TAG: ${{ github.sha }}
-    #   run: |
-    #     export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
-    #     echo $dbhostdescribe
-    #     helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
-    # - name: Show our app resources in ${GITHUB_REF_NAME} namespace
-    #   env:
-    #     KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-    #   run: |
-    #     kubectl get all -o wide -n ${GITHUB_REF_NAME}
-    # - name: send message to tg
-    #   if: ${{ failure() }}
-    #   uses: appleboy/telegram-action@master
-    #   with:
-    #     to: ${{ secrets.TELEGRAM_TO }}
-    #     token: ${{ secrets.TELEGRAM_TOKEN }}
-    #     message: |
-    #       ${{ github.actor }} created commit:
-    #       *Commit message:* ${{ github.event.commits[0].message }}
-    #       *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-    #       *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-    #       *Action:* ${{ env.ACTION }}
-    #       *Status:* ${{ job.status }}
-    #     format: "markdown"
-    #     disable_web_page_preview: true
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.actor }} created commit:
+          *Commit message:* ${{ github.event.commits[0].message }}
+          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+          *Action:* ${{ env.ACTION }}
+          *Status:* ${{ job.status }}
+        format: "markdown"
+        disable_web_page_preview: true
 
 
   dashboard:
