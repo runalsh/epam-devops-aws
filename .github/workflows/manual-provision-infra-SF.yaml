@@ -442,7 +442,7 @@ jobs:
     - name: Update creditials for kuber
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
-        kubectl config current-context
+        kubectl config set-context --current --namespace=default
     - name: Install/upgrade helm chart (NEW)
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
