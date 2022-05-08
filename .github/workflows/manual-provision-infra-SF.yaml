@@ -599,14 +599,14 @@ jobs:
 
 
 
-  cleandocker:
-    runs-on: self-hosted
-    if: ${{ always() }}
-    needs: [sonarcloud,buiildpushfront,buiildpushback]
-    env:
-      ACTION:  Clean builded images for save space
-    steps:
-      - name: Run docker rmi
-        run: |
-          docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | grep -v "^amazon" | awk '{print $3}') --force
-        continue-on-error: true
+  # cleandocker:
+  #   runs-on: self-hosted
+  #   if: ${{ always() }}
+  #   needs: [sonarcloud,buiildpushfront,buiildpushback]
+  #   env:
+  #     ACTION:  Clean builded images for save space
+  #   steps:
+  #     - name: Run docker rmi
+  #       run: |
+  #         docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | grep -v "^amazon" | awk '{print $3}') --force
+  #       continue-on-error: true
