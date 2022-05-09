@@ -269,29 +269,39 @@ resource "aws_cloudwatch_metric_alarm" "disk_low_runner" {
 
 resource "aws_sns_topic" "alarmrunner" {
   name            = "${var.prefix}-runner-alarms"
-  delivery_policy = <<EOF
-  {
-  "http": {
-    "defaultHealthyRetryPolicy": {
-      "minDelayTarget": 20,
-      "maxDelayTarget": 20,
-      "numRetries": 3,
-      "numMaxDelayRetries": 0,
-      "numNoDelayRetries": 0,
-      "numMinDelayRetries": 0,
-      "backoffFunction": "linear"
-    },
-    "disableSubscriptionOverrides": false,
-    "defaultThrottlePolicy": {
-      "maxReceivesPerSecond": 1
-      }
-    }
-  }
-  EOF
+  # delivery_policy = <<EOF
+  # {
+  # "http": {
+  #   "defaultHealthyRetryPolicy": {
+  #     "minDelayTarget": 20,
+  #     "maxDelayTarget": 20,
+  #     "numRetries": 3,
+  #     "numMaxDelayRetries": 0,
+  #     "numNoDelayRetries": 0,
+  #     "numMinDelayRetries": 0,
+  #     "backoffFunction": "linear"
+  #   },
+  #   "disableSubscriptionOverrides": false,
+  #   "defaultThrottlePolicy": {
+  #     "maxReceivesPerSecond": 1
+  #     }
+  #   }
+  # }
+  # EOF
 
-  provisioner "local-exec" {
-    command = "aws sns subscribe --topic-arn ${self.arn} --protocol email --notification-endpoint ${var.alarms_email}"
-  }
+  # provisioner "local-exec" {
+  #   command = "aws sns subscribe --topic-arn ${self.arn} --protocol email --notification-endpoint ${var.alarms_email}"
+  # }
+}
+
+resource "aws_sns_topic_subscription" "runner-email-sns" {
+  depends_on = [
+    aws_sns_topic.alarmrunner
+  ]
+  topic_arn = aws_sns_topic.alarmrunner.arn
+  protocol  = "email"
+  endpoint  = var.alarms_email
+  confirmation_timeout_in_minutes = "10"
 }
 
 
@@ -332,7 +342,7 @@ resource "aws_instance" "runner" {
     key_name                = var.key_name2
     iam_instance_profile  = "${aws_iam_instance_profile.runner_profile.name}"
 
-    user_data_replace_on_change =  true
+    user_data_replace_on_change =  false
     user_data = data.template_cloudinit_config.cloudinit_config.rendered
 
     # lifecycle {

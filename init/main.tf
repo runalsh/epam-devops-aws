@@ -428,48 +428,107 @@ resource "aws_cloudwatch_log_stream" "eks-logs-stream" {
  log_group_name = "${aws_cloudwatch_log_group.eks-logs.name}"
 }
 
-resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-  alarm_name          = "cpu_utilization_high"
+resource "aws_cloudwatch_metric_alarm" "node_cpu_high" {
+  alarm_name          = "${var.clustername}-Node CPU Utilization high"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "30"
+  metric_name         = "node_cpu_utilization"
+  namespace           = "AWS/ContainerInsights"
+  period              = "60"
   statistic           = "Average"
   threshold           = "80"
+  alarm_actions = ["${aws_sns_topic.alarm.arn}"]
 
   dimensions = {
     ClusterName = "${aws_eks_cluster.eks_cluster.name}"
   }
+}
 
+resource "aws_cloudwatch_metric_alarm" "node_mem_high" {
+  alarm_name          = "${var.clustername}-Node memory utilization high"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "node_memory_utilization"
+  namespace           = "AWS/ContainerInsights"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "80"
   alarm_actions = ["${aws_sns_topic.alarm.arn}"]
+
+  dimensions = {
+    ClusterName = "${aws_eks_cluster.eks_cluster.name}"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "db_low_storage" {
+  alarm_name          = "${aws_db_instance.db.name}-Database low storage space"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "FreeStorageSpace"
+  namespace           = "AWS/RDS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "100000000"
+  alarm_actions       = [aws_sns_topic.alarm.arn]
+  ok_actions          = [aws_sns_topic.alarm.arn]
+
+  dimensions = {
+    DBInstanceName = "${aws_db_instance.db.id}"
+  }
 }
 
 resource "aws_sns_topic" "alarm" {
   name            = "${var.prefix}-alarms"
-  delivery_policy = <<EOF
-  {
-  "http": {
-    "defaultHealthyRetryPolicy": {
-      "minDelayTarget": 20,
-      "maxDelayTarget": 20,
-      "numRetries": 3,
-      "numMaxDelayRetries": 0,
-      "numNoDelayRetries": 0,
-      "numMinDelayRetries": 0,
-      "backoffFunction": "linear"
-    },
-    "disableSubscriptionOverrides": false,
-    "defaultThrottlePolicy": {
-      "maxReceivesPerSecond": 1
-      }
-    }
-  }
-  EOF
+  # delivery_policy = <<EOF
+  # {
+  # "http": {
+  #   "defaultHealthyRetryPolicy": {
+  #     "minDelayTarget": 20,
+  #     "maxDelayTarget": 20,
+  #     "numRetries": 3,
+  #     "numMaxDelayRetries": 0,
+  #     "numNoDelayRetries": 0,
+  #     "numMinDelayRetries": 0,
+  #     "backoffFunction": "linear"
+  #   },
+  #   "disableSubscriptionOverrides": false,
+  #   "defaultThrottlePolicy": {
+  #     "maxReceivesPerSecond": 1
+  #     }
+  #   }
+  # }
+  # EOF
 
-  provisioner "local-exec" {
-    command = "aws sns subscribe --topic-arn ${self.arn} --protocol email --notification-endpoint ${var.alarms_email}"
-  }
+  # provisioner "local-exec" {
+  #   command = "aws sns subscribe --topic-arn ${self.arn} --protocol email --notification-endpoint ${var.alarms_email}"
+  # }
+}
+
+resource "aws_sns_topic_subscription" "email-sns" {
+  depends_on = [
+    aws_sns_topic.alarm
+  ]
+  topic_arn = aws_sns_topic.alarm.arn
+  protocol  = "email"
+  endpoint  = var.alarms_email
+  confirmation_timeout_in_minutes = "10"
+}
+
+resource "aws_db_event_subscription" "rds-event" {
+  sns_topic = aws_sns_topic.alarm.arn
+
+  source_type = "db-instance"
+  source_ids  = [aws_db_instance.db.id]
+
+  event_categories = [
+    "failover",
+    "failure",
+    "low storage",
+    "maintenance",
+    "notification",
+    "recovery",
+  ]
+
 }
 
 
