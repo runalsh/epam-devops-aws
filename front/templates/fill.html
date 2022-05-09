@@ -2,32 +2,71 @@
 <!DOCTYPE html>
 <html lang="fa">
 
-
-
 <body>
-  <div class='container-fluid'>
- <h1 class='text-center'>oh...</h1>
-  <h2 class='text-center'>wow!</h2>
-  <h3 class='text-center'>amazing :D</h3>
- <br>
-
-<form class="row g-3" action="/showmeweather" method="GET">
-
-  <div class="col-auto">
-    <label for="date" class="visually-hidden">Enter date for watch temperature</label>
-    <input type="text" name="date" class="form-control" id="date" placeholder="YYYY/MM/DD" pattern="[0-9]{4}.(0[1-9]|1[012]).(0[1-9]|1[0-9]|2[0-9]|3[01])" required>
+  
+<div>
+  <div class="container-fluid">
+  <h1 class="text-center">oh...</h1>
+  <h2 class="text-center">wow!</h2>
+  <h3 class="text-center">amazing :D</h3>
+  <h4 class="text-center">Commands:</h4>
+  <table style="border-collapse: collapse; width: 100%;" border="1">
+  <tbody>
+  <tr>
+  <td style="width: 33.3333%;">frontend</td>
+  <td style="width: 33.3333%;">whats do</td>
+  <td style="width: 33.3333%;">backend</td>
+  </tr>
+  <tr>
+  <td style="width: 33.3333%;"><a href="/cpu" target="_blank">/cpu</a></td>
+  <td style="width: 33.3333%;">show current CPU load</td>
+  <td style="width: 33.3333%;"><a href="/cpuback" target="_blank">/cpuback</a></td>
+  </tr>
+  <tr>
+  <td style="width: 33.3333%;"><a href="/ping" target="_blank">/ping</a></td>
+  <td style="width: 33.3333%;">health check and return pod name</td>
+  <td style="width: 33.3333%;"><a href="/pingback" target="_blank">/pingback</a></td>
+  </tr>
+  <tr>
+  <td style="width: 33.3333%;"><a href="/getdata" target="_blank">/getdata</a></td>
+  <td style="width: 33.3333%;">update database with data for current month</td>
+  <td style="width: 33.3333%;">-</td>
+  </tr>
+  <tr>
+  <td style="width: 33.3333%;"><a href="/cleandata" target="_blank">/cleandata</a></td>
+  <td style="width: 33.3333%;">delete all data from database</td>
+  <td style="width: 33.3333%;">-</td>
+  </tr>
+  <tr>
+  <td style="width: 33.3333%;"><a href="/showmeallweather" target="_blank">/showmeallweather</a></td>
+  <td style="width: 33.3333%;">show full data stored in database</td>
+  <td style="width: 33.3333%;">-</td>
+  </tr>
+  <tr>
+  <td style="width: 33.3333%;"><a href="/stress" target="_blank">/stress</a></td>
+  <td style="width: 33.3333%;">stress CPU for 10 second</td>
+  <td style="width: 33.3333%;"><a href="/stressback" target="_blank">/stressback</a></td>
+  </tr>
+  <tr>
+  <td style="width: 33.3333%;"><a href="/stresstime/20">/stresstime/&lt;number&gt;</a></td>
+  <td style="width: 33.3333%;">stress CPU for &lt;number&gt; seconds</td>
+  <td style="width: 33.3333%;">-</td>
+  </tr>
+  <tr>
+  <td style="width: 33.3333%;"><a href="/">/</a></td>
+  <td style="width: 33.3333%;">main page (this)</td>
+  <td style="width: 33.3333%;">/</td>
+  </tr>
+  </tbody>
+  </table>
+  <br /><form class="row g-3" action="/showmeweather" method="GET">
+  <div class="col-auto"><label class="visually-hidden" for="date">Enter date for watch temperature (example: 2022/05/12)</label></div>
+  <div class="col-auto">&nbsp;</div>
+  <div class="col-auto"><input id="date" class="form-control" name="date" pattern="[0-9]{4}.(0[1-9]|1[012]).(0[1-9]|1[0-9]|2[0-9]|3[01])" required="" type="text" placeholder="YYYY/MM/DD" /></div>
+  <div class="col-auto">&nbsp;</div>
+  <div class="col-auto"><button class="btn btn-primary mb-3" type="submit">Get info</button></div>
+  </form></div>
   </div>
-  <div class="col-auto">
-    <button type="submit" class="btn btn-primary mb-3">Get info</button>
-  </div>
-</form>
-
-
-</div>
-
 </body>
 
 </html>
-
-
-

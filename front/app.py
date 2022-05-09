@@ -64,10 +64,10 @@ def cleandata():
     response = requests.get(backapp + "/back/cleandata")
     return response.json()
 
-# @app.route('/showmeallweather')
-# def showmeallweather():
-#     allweather()
-#     return "index html from host %host ready at"+current_time
+@app.route('/showmeallweather')
+def showmeallweather():
+    allweather()
+    return "index html from host %host ready at"+current_time
 
 @app.route("/stresstime/<int:seconds>")
 def stresstime(seconds):
