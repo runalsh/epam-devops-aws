@@ -10,5 +10,5 @@ dbpassword: pypostgres
 dbuser: pypostgres
 dbname: wandb
 imagetag: latest ## imagetag is not using here. get values from githubaction
-minbackreplicas: 2
+minbackreplicas: 1
 minfrontreplicas: 2
