@@ -342,7 +342,7 @@ resource "aws_instance" "runner" {
     key_name                = var.key_name2
     iam_instance_profile  = "${aws_iam_instance_profile.runner_profile.name}"
 
-    user_data_replace_on_change =  false
+    user_data_replace_on_change =  true
     user_data = data.template_cloudinit_config.cloudinit_config.rendered
 
     # lifecycle {

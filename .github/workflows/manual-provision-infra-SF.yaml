@@ -494,7 +494,6 @@ jobs:
     - name: check version
       run: |  
         aws --version
-        kubectl version --client
         kubectl version
     - name: Get admin permissions
       run: |
