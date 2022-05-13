@@ -698,17 +698,17 @@ resource "aws_iam_policy" "route53_modify_policy" {
 EOF
 }
 
-resource "aws_route53_record" "load_balancer_record" {
-  name    = "alb.${var.domain}"
-  type    = "A"
-  zone_id = "${data.aws_route53_zone.selectedzone.zone_id}"
+# # resource "aws_route53_record" "load_balancer_record" {
+# #   name    = "alb.${var.domain}"
+# #   type    = "A"
+# #   zone_id = "${data.aws_route53_zone.selectedzone.zone_id}"
 
-  alias {
-    evaluate_target_health  = false
-    name                    = "${aws_alb.cluster_alb.dns_name}"
-    zone_id                 = "${aws_alb.cluster_alb.zone_id}"
-  }
-}
+# #   alias {
+# #     evaluate_target_health  = false
+# #     name                    = "${aws_alb.cluster_alb.dns_name}"
+# #     zone_id                 = "${aws_alb.cluster_alb.zone_id}"
+# #   }
+# # }
 
 # ## ====================  ALB
 
