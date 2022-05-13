@@ -561,7 +561,7 @@ resource "aws_db_event_subscription" "rds-event" {
 
 
 
-##=============================EKS
+#=============================EKS
 
 resource "aws_eks_cluster" "eks_cluster" {
   name     = var.clustername
@@ -698,76 +698,76 @@ resource "aws_iam_policy" "route53_modify_policy" {
 EOF
 }
 
-# resource "aws_route53_record" "load_balancer_record" {
-#   name    = "alb.${var.domain}"
-#   type    = "A"
-#   zone_id = "${data.aws_route53_zone.selectedzone.zone_id}"
+resource "aws_route53_record" "load_balancer_record" {
+  name    = "alb.${var.domain}"
+  type    = "A"
+  zone_id = "${data.aws_route53_zone.selectedzone.zone_id}"
 
-#   alias {
-#     evaluate_target_health  = false
-#     name                    = "${aws_alb.cluster_alb.dns_name}"
-#     zone_id                 = "${aws_alb.cluster_alb.zone_id}"
-#   }
-# }
+  alias {
+    evaluate_target_health  = false
+    name                    = "${aws_alb.cluster_alb.dns_name}"
+    zone_id                 = "${aws_alb.cluster_alb.zone_id}"
+  }
+}
 
-## ====================  ALB
+# ## ====================  ALB
 
-# resource "aws_security_group" "alb_security_group" {
-#   name        = "${var.clustername}-alb-sq"
-#   vpc_id      = "${aws_vpc.vpc_main.id}"
+# # resource "aws_security_group" "alb_security_group" {
+# #   name        = "${var.clustername}-alb-sq"
+# #   vpc_id      = "${aws_vpc.vpc_main.id}"
 
-#   ingress {
-#     from_port   = 80
-#     protocol    = "TCP"
-#     to_port     = 80
-#     cidr_blocks = [aws_vpc.vpc_main.cidr_block]
-#   }
+# #   ingress {
+# #     from_port   = 80
+# #     protocol    = "TCP"
+# #     to_port     = 80
+# #     cidr_blocks = [aws_vpc.vpc_main.cidr_block]
+# #   }
 
-#   egress {
-#     from_port   = 0
-#     protocol    = "-1"
-#     to_port     = 0
-#     cidr_blocks = [aws_vpc.vpc_main.cidr_block]
-#   }
-# }
+# #   egress {
+# #     from_port   = 0
+# #     protocol    = "-1"
+# #     to_port     = 0
+# #     cidr_blocks = [aws_vpc.vpc_main.cidr_block]
+# #   }
+# # }
 
-# resource "aws_alb" "cluster_alb" {
-#   name            = "${var.clustername}-alb"
-#   internal        = false
-#   security_groups = ["${aws_security_group.alb_security_group.id}"]
-#   subnets         = aws_subnet.subnets[*].id
-# }
+# # resource "aws_alb" "cluster_alb" {
+# #   name            = "${var.clustername}-alb"
+# #   internal        = false
+# #   security_groups = ["${aws_security_group.alb_security_group.id}"]
+# #   subnets         = aws_subnet.subnets[*].id
+# # }
 
-# resource "aws_alb_listener" "alb_listener" {
-#   load_balancer_arn = "${aws_alb.cluster_alb.arn}"
-#   port              = "80"
-#   protocol          = "HTTP"
+# # resource "aws_alb_listener" "alb_listener" {
+# #   load_balancer_arn = "${aws_alb.cluster_alb.arn}"
+# #   port              = "80"
+# #   protocol          = "HTTP"
   
-#   default_action {
-#     type              = "forward"
-#     target_group_arn  = "${aws_alb_target_group.target_group.arn}"
-#   }
+# #   default_action {
+# #     type              = "forward"
+# #     target_group_arn  = "${aws_alb_target_group.target_group.arn}"
+# #   }
 
-#   depends_on = ["aws_alb_target_group.target_group"]
-# }
+# #   depends_on = ["aws_alb_target_group.target_group"]
+# # }
 
-# resource "aws_alb_target_group" "target_group" {
-#   name        = "${var.clustername}-targetgroup"
-#   port        = 80
-#   protocol    = "HTTP"
-#   vpc_id      = "${aws_vpc.vpc_main.id}"
-#   target_type = "ip"
+# # resource "aws_alb_target_group" "target_group" {
+# #   name        = "${var.clustername}-targetgroup"
+# #   port        = 80
+# #   protocol    = "HTTP"
+# #   vpc_id      = "${aws_vpc.vpc_main.id}"
+# #   target_type = "ip"
 
-#   health_check {
-#     healthy_threshold   = "3"
-#     interval            = "30"
-#     protocol            = "HTTP"
-#     matcher             = "200"
-#     timeout             = "3"
-#     path                = "/"
-#     unhealthy_threshold = "2"
-#   }
-# }
+# #   health_check {
+# #     healthy_threshold   = "3"
+# #     interval            = "30"
+# #     protocol            = "HTTP"
+# #     matcher             = "200"
+# #     timeout             = "3"
+# #     path                = "/"
+# #     unhealthy_threshold = "2"
+# #   }
+# # }
 
 
 
