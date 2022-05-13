@@ -407,6 +407,7 @@ jobs:
     # needs: deployaws
     env:
       ACTION: Deploy images from ECR to kube with helm
+      KUBECONFIG : "/root/.kube/config"
     name: Deploy images from ECR to kube with helm
     defaults:
       run:
@@ -433,17 +434,13 @@ jobs:
         echo "::set-output name=KUBE_CONFIG_DATA::$(cat /root/.kube/config | base64)"
     - name: Install/upgrade helm chart (NEW)
       env:
-        KUBECONFIG : "/root/.kube/config"
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
         echo $dbhostdescribe
         helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
-    
     - name: Show our app resources in ${GITHUB_REF_NAME} namespace
-      env:
-        KUBECONFIG : "/root/.kube/config"
       run: |
         kubectl get all -o wide -n ${GITHUB_REF_NAME}
     - name: send message to tg
@@ -498,15 +495,13 @@ jobs:
     - name: Get admin permissions
       run: |
         kubectl apply -f admin.yaml
-    - name: Setting up dashboard
-      run: |
-        kubectl apply -f dashboard.yaml
+    # - name: Setting up dashboard
+    #   run: |
+    #     kubectl apply -f dashboard.yaml
     # # kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
     # # kubectl proxy
     # # dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
     - name: Setting up metrics
-      env:
-        KUBECONFIG : "/root/.kube/config"
       run: |
         kubectl apply -f metrics-server.yaml   
 
@@ -527,72 +522,73 @@ jobs:
         disable_web_page_preview: true
 
 
-  grafanaprometheus:
-    needs: dashboard
-    env:
-      ACTION: Deploy grafana and prometheus
-      KUBECONFIG : "/root/.kube/config"
-    name: Deploy grafana and prometheus
-    # defaults:
-    #   run:
-    #     working-directory: deployk8s
-    runs-on: self-hosted
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1    
-    - name: Update creditials for kuber
-      run: |
-        aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
-    - uses: azure/setup-kubectl@v2.0
-      with:
-        version: 'v1.23.6'
-    - name: check version
-      env:
-        KUBECONFIG : "/root/.kube/config"
-      run: |  
-        aws --version
-        kubectl version
-    - name: create namespace for promgraf
-      run: |
-        kubectl create namespace promgraf
-    - name: add repo for prom graf
-      run: |
-        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-        helm repo add grafana https://grafana.github.io/helm-charts
-        helm repo add stable https://charts.helm.sh/stable
-        helm repo update
-    - name: install prom graf
-      run: |
-        helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace promgraf
-        helm upgrade --install loki grafana/loki-stack --namespace promgraf
-    - name: expose port for grafana
-      run: |
-        kubectl port-forward -n promgraf $(kubectl get pods -n promgraf | grep grafana | awk '{print $1}') --address 0.0.0.0 3000
+  # grafanaprometheus:
+  #   needs: dashboard
+  #   env:
+  #     ACTION: Deploy grafana and prometheus
+  #     KUBECONFIG : "/root/.kube/config"
+  #   name: Deploy grafana and prometheus
+  #   runs-on: self-hosted
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1    
+  #   - name: Update creditials for kuber
+  #     run: |
+  #       aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - uses: azure/setup-kubectl@v2.0
+  #     with:
+  #       version: 'v1.23.6'
+  #   - name: check version
+  #     env:
+  #       KUBECONFIG : "/root/.kube/config"
+  #     run: |  
+  #       aws --version
+  #       kubectl version
+  #   - name: create namespace for promgraf
+  #     run: |
+  #       kubectl create namespace promgraf
+  #   - name: add repo for prom graf
+  #     run: |
+  #       helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  #       helm repo add grafana https://grafana.github.io/helm-charts
+  #       helm repo add stable https://charts.helm.sh/stable
+  #       helm repo update
+  #   - name: install prom graf
+  #     run: |
+  #       helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace promgraf
+  #       helm upgrade --install loki grafana/loki-stack --namespace promgraf
+  #   - name: password for grafana admin
+  #     run: |
+  #       kubectl get secret --namespace promgraf loki-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+  #   - name: expose port to LB for grafana
+  #     run: |
+  #       kubectl port-forward --namespace promgraf $(kubectl get pods --namespace promgraf | grep grafana | awk '{print $1}') --address 0.0.0.0 3000
+  #       kubectl expose deployment grafana --namespace promgraf --type=LoadBalancer --port=80 --target-port=3000 --protocol=TCP
 
-    - name: send message to tg
-      if: ${{ failure() }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          ${{ github.actor }} created commit:
-          *Commit message:* ${{ github.event.commits[0].message }}
-          *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
-          *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
-          *Action:* ${{ env.ACTION }}
-          *Status:* ${{ job.status }}
-        format: "markdown"
-        disable_web_page_preview: true
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #         ${{ github.actor }} created commit:
+  #         *Commit message:* ${{ github.event.commits[0].message }}
+  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #         *Action:* ${{ env.ACTION }}
+  #         *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
 
   monitoring:
     needs: dashboard
