@@ -418,118 +418,118 @@ resource "aws_security_group" "db_sg" {
 
 ### =======================c  cloudwatch
 
-resource "aws_cloudwatch_log_group" "eks-logs" {
-  name              = "/aws/eks/${var.clustername}/"
-  retention_in_days = 3
-}
+# resource "aws_cloudwatch_log_group" "eks-logs" {
+#   name              = "/aws/eks/${var.clustername}/"
+#   retention_in_days = 3
+# }
 
-resource "aws_cloudwatch_log_stream" "eks-logs-stream" {
- name           = "${var.clustername}-logs-stream"
- log_group_name = "${aws_cloudwatch_log_group.eks-logs.name}"
-}
+# resource "aws_cloudwatch_log_stream" "eks-logs-stream" {
+#  name           = "${var.clustername}-logs-stream"
+#  log_group_name = "${aws_cloudwatch_log_group.eks-logs.name}"
+# }
 
-resource "aws_cloudwatch_metric_alarm" "node_cpu_high" {
-  alarm_name          = "${var.clustername}-Node CPU Utilization high"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "node_cpu_utilization"
-  namespace           = "AWS/ContainerInsights"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "80"
-  alarm_actions = ["${aws_sns_topic.alarm.arn}"]
+# resource "aws_cloudwatch_metric_alarm" "node_cpu_high" {
+#   alarm_name          = "${var.clustername}-Node CPU Utilization high"
+#   comparison_operator = "GreaterThanOrEqualToThreshold"
+#   evaluation_periods  = "2"
+#   metric_name         = "node_cpu_utilization"
+#   namespace           = "AWS/ContainerInsights"
+#   period              = "60"
+#   statistic           = "Average"
+#   threshold           = "80"
+#   alarm_actions = ["${aws_sns_topic.alarm.arn}"]
 
-  dimensions = {
-    ClusterName = "${aws_eks_cluster.eks_cluster.name}"
-  }
-}
+#   dimensions = {
+#     ClusterName = "${aws_eks_cluster.eks_cluster.name}"
+#   }
+# }
 
-resource "aws_cloudwatch_metric_alarm" "node_mem_high" {
-  alarm_name          = "${var.clustername}-Node memory utilization high"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "node_memory_utilization"
-  namespace           = "AWS/ContainerInsights"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "80"
-  alarm_actions = ["${aws_sns_topic.alarm.arn}"]
+# resource "aws_cloudwatch_metric_alarm" "node_mem_high" {
+#   alarm_name          = "${var.clustername}-Node memory utilization high"
+#   comparison_operator = "GreaterThanOrEqualToThreshold"
+#   evaluation_periods  = "2"
+#   metric_name         = "node_memory_utilization"
+#   namespace           = "AWS/ContainerInsights"
+#   period              = "60"
+#   statistic           = "Average"
+#   threshold           = "80"
+#   alarm_actions = ["${aws_sns_topic.alarm.arn}"]
 
-  dimensions = {
-    ClusterName = "${aws_eks_cluster.eks_cluster.name}"
-  }
-}
+#   dimensions = {
+#     ClusterName = "${aws_eks_cluster.eks_cluster.name}"
+#   }
+# }
 
-resource "aws_cloudwatch_metric_alarm" "db_low_storage" {
-  alarm_name          = "${aws_db_instance.db.name}-Database low storage space"
-  comparison_operator = "LessThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "FreeStorageSpace"
-  namespace           = "AWS/RDS"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "100000000"
-  alarm_actions       = [aws_sns_topic.alarm.arn]
-  ok_actions          = [aws_sns_topic.alarm.arn]
+# resource "aws_cloudwatch_metric_alarm" "db_low_storage" {
+#   alarm_name          = "${aws_db_instance.db.name}-Database low storage space"
+#   comparison_operator = "LessThanThreshold"
+#   evaluation_periods  = "2"
+#   metric_name         = "FreeStorageSpace"
+#   namespace           = "AWS/RDS"
+#   period              = "60"
+#   statistic           = "Average"
+#   threshold           = "100000000"
+#   alarm_actions       = [aws_sns_topic.alarm.arn]
+#   ok_actions          = [aws_sns_topic.alarm.arn]
 
-  dimensions = {
-    DBInstanceName = "${aws_db_instance.db.id}"
-  }
-}
+#   dimensions = {
+#     DBInstanceName = "${aws_db_instance.db.id}"
+#   }
+# }
 
-resource "aws_sns_topic" "alarm" {
-  name            = "${var.prefix}-alarms"
-  # delivery_policy = <<EOF
-  # {
-  # "http": {
-  #   "defaultHealthyRetryPolicy": {
-  #     "minDelayTarget": 20,
-  #     "maxDelayTarget": 20,
-  #     "numRetries": 3,
-  #     "numMaxDelayRetries": 0,
-  #     "numNoDelayRetries": 0,
-  #     "numMinDelayRetries": 0,
-  #     "backoffFunction": "linear"
-  #   },
-  #   "disableSubscriptionOverrides": false,
-  #   "defaultThrottlePolicy": {
-  #     "maxReceivesPerSecond": 1
-  #     }
-  #   }
-  # }
-  # EOF
+# resource "aws_sns_topic" "alarm" {
+#   name            = "${var.prefix}-alarms"
+#   # delivery_policy = <<EOF
+#   # {
+#   # "http": {
+#   #   "defaultHealthyRetryPolicy": {
+#   #     "minDelayTarget": 20,
+#   #     "maxDelayTarget": 20,
+#   #     "numRetries": 3,
+#   #     "numMaxDelayRetries": 0,
+#   #     "numNoDelayRetries": 0,
+#   #     "numMinDelayRetries": 0,
+#   #     "backoffFunction": "linear"
+#   #   },
+#   #   "disableSubscriptionOverrides": false,
+#   #   "defaultThrottlePolicy": {
+#   #     "maxReceivesPerSecond": 1
+#   #     }
+#   #   }
+#   # }
+#   # EOF
 
-  # provisioner "local-exec" {
-  #   command = "aws sns subscribe --topic-arn ${self.arn} --protocol email --notification-endpoint ${var.alarms_email}"
-  # }
-}
+#   # provisioner "local-exec" {
+#   #   command = "aws sns subscribe --topic-arn ${self.arn} --protocol email --notification-endpoint ${var.alarms_email}"
+#   # }
+# }
 
-resource "aws_sns_topic_subscription" "email-sns" {
-  depends_on = [
-    aws_sns_topic.alarm
-  ]
-  topic_arn = aws_sns_topic.alarm.arn
-  protocol  = "email"
-  endpoint  = var.alarms_email
-  confirmation_timeout_in_minutes = "10"
-}
+# resource "aws_sns_topic_subscription" "email-sns" {
+#   depends_on = [
+#     aws_sns_topic.alarm
+#   ]
+#   topic_arn = aws_sns_topic.alarm.arn
+#   protocol  = "email"
+#   endpoint  = var.alarms_email
+#   confirmation_timeout_in_minutes = "10"
+# }
 
-resource "aws_db_event_subscription" "rds-event" {
-  sns_topic = aws_sns_topic.alarm.arn
+# resource "aws_db_event_subscription" "rds-event" {
+#   sns_topic = aws_sns_topic.alarm.arn
 
-  source_type = "db-instance"
-  source_ids  = [aws_db_instance.db.id]
+#   source_type = "db-instance"
+#   source_ids  = [aws_db_instance.db.id]
 
-  event_categories = [
-    "failover",
-    "failure",
-    "low storage",
-    "maintenance",
-    "notification",
-    "recovery",
-  ]
+#   event_categories = [
+#     "failover",
+#     "failure",
+#     "low storage",
+#     "maintenance",
+#     "notification",
+#     "recovery",
+#   ]
 
-}
+# }
 
 
 #command = "curl https://api.telegram.org/bot${local.TOKEN}/sendMessage?text="ALARMALARMALARM"&chat_id=${local.ID}
@@ -561,67 +561,67 @@ resource "aws_db_event_subscription" "rds-event" {
 
 
 
-#=============================EKS
+# #=============================EKS
 
-resource "aws_eks_cluster" "eks_cluster" {
-  name     = var.clustername
-  role_arn = aws_iam_role.eks-cluster.arn
-  version    = "1.22"
-  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+# resource "aws_eks_cluster" "eks_cluster" {
+#   name     = var.clustername
+#   role_arn = aws_iam_role.eks-cluster.arn
+#   version    = "1.22"
+#   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-  vpc_config {
-    # endpoint_private_access = true
-    # endpoint_public_access  = true
-    security_group_ids = [aws_security_group.cluster_sg.id]
-    subnet_ids = aws_subnet.subnets[*].id
-  }
-  depends_on = [
-     aws_iam_role_policy_attachment.eks-cluster-policy,
-     aws_iam_role_policy_attachment.eks-vpc-policy,
-     aws_cloudwatch_log_group.eks-logs
-  ]
-}
+#   vpc_config {
+#     # endpoint_private_access = true
+#     # endpoint_public_access  = true
+#     security_group_ids = [aws_security_group.cluster_sg.id]
+#     subnet_ids = aws_subnet.subnets[*].id
+#   }
+#   depends_on = [
+#      aws_iam_role_policy_attachment.eks-cluster-policy,
+#      aws_iam_role_policy_attachment.eks-vpc-policy,
+#      aws_cloudwatch_log_group.eks-logs
+#   ]
+# }
 
-resource "aws_eks_node_group" "nodes" {
-  cluster_name    = aws_eks_cluster.eks_cluster.name
-  node_group_name = "nodes"
-  node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
-  subnet_ids      = aws_subnet.subnets[*].id
-  scaling_config {
-    desired_size = var.desirednumberofnodes
-    max_size     = var.maxnumberofnodes
-    min_size     = var.minnumberofnodes
-  }
+# resource "aws_eks_node_group" "nodes" {
+#   cluster_name    = aws_eks_cluster.eks_cluster.name
+#   node_group_name = "nodes"
+#   node_role_arn   = aws_iam_role.eks-worker-node-iam-role.arn
+#   subnet_ids      = aws_subnet.subnets[*].id
+#   scaling_config {
+#     desired_size = var.desirednumberofnodes
+#     max_size     = var.maxnumberofnodes
+#     min_size     = var.minnumberofnodes
+#   }
 
-#    remote_access {
-#      ec2_ssh_key = var.key_name2
-#     source_security_group_ids = [aws_security_group.sg_main.id]
-#    }
+# #    remote_access {
+# #      ec2_ssh_key = var.key_name2
+# #     source_security_group_ids = [aws_security_group.sg_main.id]
+# #    }
 
-  disk_size            = 8
-  # capacity_type        = "ON_DEMAND"
-  capacity_type        = "SPOT"
-  force_update_version = false
-  instance_types       = [var.clusternode_type]
-  ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
-  labels               = {
-    role = "nodes"
-  }
+#   disk_size            = 8
+#   # capacity_type        = "ON_DEMAND"
+#   capacity_type        = "SPOT"
+#   force_update_version = false
+#   instance_types       = [var.clusternode_type]
+#   ###  you must choose instance with > = 12 pods https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
+#   labels               = {
+#     role = "nodes"
+#   }
 
-  depends_on = [
-    aws_iam_role_policy_attachment.eks-worker-node-policy,
-    aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
-    aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
-    aws_iam_role_policy_attachment.cloudwatch-logs-full-access,
-    aws_iam_role_policy_attachment.route53_modify_policy
-  ]
-}
+#   depends_on = [
+#     aws_iam_role_policy_attachment.eks-worker-node-policy,
+#     aws_iam_role_policy_attachment.eks-worker-node-eks-cni-policy,
+#     aws_iam_role_policy_attachment.eks-worker-node-ec2-container-registry-readonly-policy-attachment,
+#     aws_iam_role_policy_attachment.cloudwatch-logs-full-access,
+#     aws_iam_role_policy_attachment.route53_modify_policy
+#   ]
+# }
 
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.eks_cluster.endpoint
-  token                  = data.aws_eks_cluster_auth.eks_cluster.token
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
-}
+# provider "kubernetes" {
+#   host                   = data.aws_eks_cluster.eks_cluster.endpoint
+#   token                  = data.aws_eks_cluster_auth.eks_cluster.token
+#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks_cluster.certificate_authority.0.data)
+# }
 
 
 #=========  RUNNER  ======================

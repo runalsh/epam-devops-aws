@@ -565,14 +565,14 @@ jobs:
   #   - name: install prom graf
   #     run: |
   #       helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace promgraf
-  #       helm upgrade --install loki grafana/loki-stack --namespace promgraf
-  #   - name: password for grafana admin
-  #     run: |
-  #       kubectl get secret --namespace promgraf loki-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+  #       helm upgrade --install loki grafana/loki-stack --namespace promgraf --set grafana.enabled=true
+  # #   - name: password for grafana admin
+  # #     run: |
+  # #       kubectl get secret --namespace promgraf loki-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
   #   - name: expose port to LB for grafana
   #     run: |
-  #       kubectl port-forward --namespace promgraf $(kubectl get pods --namespace promgraf | grep grafana | awk '{print $1}') --address 0.0.0.0 3000
-  #       kubectl expose deployment grafana --namespace promgraf --type=LoadBalancer --port=80 --target-port=3000 --protocol=TCP
+  #       kubectl port-forward --namespace promgraf service/loki-grafana 3000:80
+  #       kubectl expose deployment loki-grafana --name=grafana-load-balancer --namespace promgraf --type=LoadBalancer --port=80 --target-port=3000 --protocol=TCP
 
   #   - name: send message to tg
   #     if: ${{ failure() }}
