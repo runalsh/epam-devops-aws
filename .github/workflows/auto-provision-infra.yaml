@@ -15,18 +15,30 @@ on:
       # - 'front/**'
      # - '.github/workflows/**'
 
+
 jobs:
+  update-os:
+    runs-on: self-hosted
+    env:
+      ACTION: Update system
+    steps:
+      - name: Update
+        run: |
+          sudo yum update -y
+          sudo yum upgrade -y
+
   pytest:
-    runs-on: ubuntu-latest
+    needs: update-os
+    runs-on: self-hosted
     env:
       ACTION: Test Pytest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-        cache: "pip"
+    # - name: Set up Python 3.8
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: 3.8
+    #     cache: "pip"
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
@@ -70,15 +82,16 @@ jobs:
     #     body: Job of ${{github.repository}} has ${{ job.status }}! *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
  
   # bandit:
-  #   runs-on: ubuntu-latest
+  #   runs-on: self-hosted
+  #   needs: update-os
   #   env:
   #     ACTION: Test Bandit test
   #   steps:
   #   - uses: actions/checkout@v2
-  #   - name: Set up Python 3.8
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: 3.8
+  ##   - name: Set up Python 3.8
+  ##     uses: actions/setup-python@v2
+  ##     with:
+  ##       python-version: 3.8
   #   - name: Install dependencies
   #     run: |
   #       python3 -m pip install --upgrade pip
@@ -108,7 +121,8 @@ jobs:
   #       disable_web_page_preview: true
     
   sonarcloud:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    needs: update-os
     steps:
     - uses: actions/checkout@v2
       with:
@@ -137,15 +151,16 @@ jobs:
         disable_web_page_preview: true
 
   pylint:
-    runs-on: ubuntu-latest 
+    runs-on: self-hosted
+    needs: update-os
     env:
       ACTION: Test Linter check
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
+    # - name: Set up Python 3.9
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: 3.9
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
@@ -177,7 +192,7 @@ jobs:
         disable_web_page_preview: true
         
   #  checkenv:
-  #   runs-on: ubuntu-latest
+  #   runs-on: self-hosted
   #   steps:
   #       - uses: FranzDiebold/github-env-vars-action@v2.3.1
   #       - name: Print environment variables
@@ -198,7 +213,7 @@ jobs:
   deploys3:
     needs: [pytest, pylint, sonarcloud]
     name: deploying S3 buckets
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: s3
@@ -211,6 +226,9 @@ jobs:
     steps:
       - name: Checkout 
         uses: actions/checkout@v2
+
+      - name: Setup Nodejs
+        uses: actions/setup-node@v1  
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -249,7 +267,7 @@ jobs:
   deployaws:
     needs: deploys3
     name: deploying aws with terraform 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: init
@@ -261,6 +279,9 @@ jobs:
     steps:
       - name: Checkout 
         uses: actions/checkout@v2
+
+      - name: Setup Nodejs
+        uses: actions/setup-node@v1    
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -307,7 +328,7 @@ jobs:
     defaults:
       run:
         working-directory: back
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -355,7 +376,7 @@ jobs:
     defaults:
       run:
         working-directory: front
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -400,11 +421,12 @@ jobs:
     # needs: deployaws
     env:
       ACTION: Deploy images from ECR to kube with helm
+      KUBECONFIG : "/root/.kube/config"
     name: Deploy images from ECR to kube with helm
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -419,41 +441,20 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
     - name: Update creditials for kuber
       run: |
-        aws eks update-kubeconfig --name "epam-py-cluster"
+        aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
     - name: Configure Kubeconfig
       id: kube_config_data
       run: |
-        echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
-    
-    - uses: azure/setup-kubectl@v2.0
-      with:
-        version: 'v1.23.6'
-    
-    - name: Deploy to EKS
-      env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      run: |
-        aws eks update-kubeconfig --name "epam-py-cluster"
-        kubectl config current-context
-    
+        echo "::set-output name=KUBE_CONFIG_DATA::$(cat /root/.kube/config | base64)"
     - name: Install/upgrade helm chart (NEW)
       env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
         export dbhostdescribe=$(aws rds describe-db-instances --db-instance-identifier db | jq '.DBInstances[].Endpoint.Address')
         echo $dbhostdescribe
         helm upgrade --install epampycluster-app-${GITHUB_REF_NAME} helm/chart/ -f helm/var-${GITHUB_REF_NAME}.yaml --set ecrname=${{ steps.login-ecr.outputs.registry }} --set dbhost=$dbhostdescribe --set imagetag=$IMAGE_TAG
-    
-    - uses: azure/setup-kubectl@v2.0
-      with:
-        version: 'v1.23.6'
-    
     - name: Show our app resources in ${GITHUB_REF_NAME} namespace
-      env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
       run: |
         kubectl get all -o wide -n ${GITHUB_REF_NAME}
     - name: send message to tg
@@ -477,11 +478,12 @@ jobs:
     needs: deploytokube
     env:
       ACTION: Deploy dashboatd and metrics
+      KUBECONFIG : "/root/.kube/config"
     name: Deploy dashboatd and metrics
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -493,31 +495,26 @@ jobs:
         aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
     - name: Login to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1  
+      uses: aws-actions/amazon-ecr-login@v1    
     - name: Update creditials for kuber
       run: |
-        aws eks update-kubeconfig --name "epam-py-cluster"
-    - name: Configure Kubeconfig
-      id: kube_config_data
-      run: |
-        echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
-    
+        aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
     - uses: azure/setup-kubectl@v2.0
       with:
         version: 'v1.23.6'
-
+    - name: check version
+      run: |  
+        aws --version
+        kubectl version
     - name: Get admin permissions
-      env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run: |
         kubectl apply -f admin.yaml
-    # - name: Setting up dashboard 
+    # - name: Setting up dashboard
     #   run: |
     #     kubectl apply -f dashboard.yaml
-    ## kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
-    ## kubectl proxy
-    ## dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
+    # # kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
+    # # kubectl proxy
+    # # dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
     - name: Setting up metrics
       run: |
         kubectl apply -f metrics-server.yaml   
@@ -538,15 +535,85 @@ jobs:
         format: "markdown"
         disable_web_page_preview: true
 
+
+  # grafanaprometheus:
+  #   needs: dashboard
+  #   env:
+  #     ACTION: Deploy grafana and prometheus
+  #     KUBECONFIG : "/root/.kube/config"
+  #   name: Deploy grafana and prometheus
+  #   runs-on: self-hosted
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+  #       aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1    
+  #   - name: Update creditials for kuber
+  #     run: |
+  #       aws eks update-kubeconfig --name "epam-py-cluster" --region ${{ secrets.AWS_DEFAULT_REGION }}
+  #   - uses: azure/setup-kubectl@v2.0
+  #     with:
+  #       version: 'v1.23.6'
+  #   - name: check version
+  #     env:
+  #       KUBECONFIG : "/root/.kube/config"
+  #     run: |  
+  #       aws --version
+  #       kubectl version
+  #   - name: create namespace for promgraf
+  #     run: |
+  #       kubectl create namespace promgraf
+  #   - name: add repo for prom graf
+  #     run: |
+  #       helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  #       helm repo add grafana https://grafana.github.io/helm-charts
+  #       helm repo add stable https://charts.helm.sh/stable
+  #       helm repo update
+  #   - name: install prom graf
+  #     run: |
+  #       helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace promgraf
+  #       helm upgrade --install loki grafana/loki-stack --namespace promgraf --set grafana.enabled=true
+  # #   - name: password for grafana admin
+  # #     run: |
+  # #       kubectl get secret --namespace promgraf loki-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+  #   - name: expose port to LB for grafana
+  #     run: |
+  #       kubectl port-forward --namespace promgraf service/loki-grafana 3000:80
+  #       kubectl expose deployment loki-grafana --name=grafana-load-balancer --namespace promgraf --type=LoadBalancer --port=80 --target-port=3000 --protocol=TCP
+
+  #   - name: send message to tg
+  #     if: ${{ failure() }}
+  #     uses: appleboy/telegram-action@master
+  #     with:
+  #       to: ${{ secrets.TELEGRAM_TO }}
+  #       token: ${{ secrets.TELEGRAM_TOKEN }}
+  #       message: |
+  #         ${{ github.actor }} created commit:
+  #         *Commit message:* ${{ github.event.commits[0].message }}
+  #         *Repository commit:*  https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  #         *Result:* ${{ github.job }} job in workflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}
+  #         *Action:* ${{ env.ACTION }}
+  #         *Status:* ${{ job.status }}
+  #       format: "markdown"
+  #       disable_web_page_preview: true
+
   monitoring:
     needs: dashboard
     env:
+      KUBECONFIG : "/root/.kube/config"
       ACTION: Deploy cloudwatch monitoring with fluentd and store logs
     name: Deploy cloudwatch monitoring with fluentd and store logs
     defaults:
       run:
         working-directory: deployk8s
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -562,18 +629,7 @@ jobs:
     - name: Update creditials for kuber
       run: |
         aws eks update-kubeconfig --name "epam-py-cluster"
-    - name: Configure Kubeconfig
-      id: kube_config_data
-      run: echo "::set-output name=KUBE_CONFIG_DATA::$(cat $HOME/.kube/config | base64)"
-    
-    - uses: azure/setup-kubectl@v2.0
-      with:
-        version: 'v1.23.6'
-    
     - name: apply cloudwatch with fluentd
-      env:
-        KUBE_CONFIG_DATA: ${{ steps.kube_config_data.outputs.KUBE_CONFIG_DATA }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}    
       run: |
         kubectl apply -f cloudwatch
 
@@ -602,3 +658,16 @@ jobs:
 
 
 
+
+
+  cleandocker:
+    runs-on: self-hosted
+    if: ${{ always() }}
+    needs: [sonarcloud,buiildpushfront,buiildpushback]
+    env:
+      ACTION:  Clean builded images for save space
+    steps:
+      - name: Run docker rmi
+        run: |
+          docker rmi $(docker images -a | grep -v "^appleboy" | grep -v "^sonarsource" | grep -v "^python" | grep -v "^amazon" | awk '{print $3}') --force
+        continue-on-error: true
