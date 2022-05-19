@@ -160,7 +160,7 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
                 },
                 "timezone": "Local",
                 "metrics": [
-                    [ "ContainerInsights", "node_number_of_running_pods", "InstanceId", "i-041c900efac984628", "NodeName", "ip-10-0-0-164.eu-central-1.compute.internal", "ClusterName", "${aws_eks_cluster.eks_cluster.name}", { "stat": "Average" } ]
+                    [ "ContainerInsights", "node_number_of_running_pods", "ClusterName", "${aws_eks_cluster.eks_cluster.name}", { "stat": "Average" } ]
                 ],
                 "start": "-P0DT1H0M0S",
                 "end": "P0D",

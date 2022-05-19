@@ -158,7 +158,7 @@ runcmd:
   - echo "1bde3f2baf514adda5f8cf2ce531edd2f6be52ed84b9b6733bf43006d36dcd4c  actions-runner-linux-x64-2.291.1.tar.gz" | shasum -a 256 -c
   - tar xzf ./actions-runner-linux-x64-2.291.1.tar.gz
   - export RUNNER_ALLOW_RUNASROOT="1"
-  - ./config.sh --url https://github.com/runalsh/epam_again_aws --token AFBAYCKC5AOC45UJB3LAXJDCPDKUC
+  - ./config.sh --url https://github.com/runalsh/epam_again_aws --token AFBAYCLGIZTVDP4MSOQJFUTCQZO6M
   - ./svc.sh install
   - ./svc.sh start
 

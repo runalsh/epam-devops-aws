@@ -561,7 +561,7 @@ resource "aws_db_event_subscription" "rds-event" {
 
 
 
-#=============================EKS
+# #=============================EKS
 
 resource "aws_eks_cluster" "eks_cluster" {
   name     = var.clustername
@@ -639,19 +639,19 @@ provider "kubernetes" {
 # # }
 # # }  
 
-data "template_file" "cloudinit_main" {
-  template = file("./ci.yml")
-}
+# # data "template_file" "cloudinit_main" {
+# #   template = file("./ci.yml")
+# # }
 
-data "template_cloudinit_config" "cloudinit_config" {
-  gzip          = false
-  base64_encode = false
-  part {
-    filename     = "./ci.yml"
-    content_type = "text/cloud-config"
-    content      = data.template_file.cloudinit_main.rendered
-  }
-}
+# # data "template_cloudinit_config" "cloudinit_config" {
+# #   gzip          = false
+# #   base64_encode = false
+# #   part {
+# #     filename     = "./ci.yml"
+# #     content_type = "text/cloud-config"
+# #     content      = data.template_file.cloudinit_main.rendered
+# #   }
+# # }
 
 ##  =========================== S53
 
