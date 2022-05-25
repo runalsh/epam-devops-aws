@@ -561,7 +561,7 @@ resource "aws_db_event_subscription" "rds-event" {
 
 
 
-# #=============================EKS
+#=============================EKS
 
 resource "aws_eks_cluster" "eks_cluster" {
   name     = var.clustername

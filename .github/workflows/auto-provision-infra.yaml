@@ -15,7 +15,6 @@ on:
       # - 'front/**'
      # - '.github/workflows/**'
 
-
 jobs:
   update-os:
     runs-on: self-hosted
