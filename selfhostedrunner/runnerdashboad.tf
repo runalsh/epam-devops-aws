@@ -4,10 +4,10 @@ resource "aws_cloudwatch_dashboard" "runner-dashboard" {
 {
     "widgets": [
         {
-            "height": 3,
-            "width": 3,
-            "y": 0,
-            "x": 9,
+            "height": 2,
+            "width": 4,
+            "y": 5,
+            "x": 8,
             "type": "metric",
             "properties": {
                 "metrics": [
@@ -21,8 +21,8 @@ resource "aws_cloudwatch_dashboard" "runner-dashboard" {
             }
         },
         {
-            "height": 6,
-            "width": 9,
+            "height": 7,
+            "width": 8,
             "y": 0,
             "x": 0,
             "type": "metric",
@@ -39,7 +39,7 @@ resource "aws_cloudwatch_dashboard" "runner-dashboard" {
             }
         },
         {
-            "height": 6,
+            "height": 7,
             "width": 9,
             "y": 0,
             "x": 15,
@@ -59,7 +59,7 @@ resource "aws_cloudwatch_dashboard" "runner-dashboard" {
         {
             "height": 6,
             "width": 24,
-            "y": 6,
+            "y": 7,
             "x": 0,
             "type": "log",
             "properties": {
@@ -109,7 +109,7 @@ resource "aws_cloudwatch_dashboard" "runner-dashboard" {
         {
             "height": 4,
             "width": 24,
-            "y": 12,
+            "y": 13,
             "x": 0,
             "type": "log",
             "properties": {
@@ -118,6 +118,33 @@ resource "aws_cloudwatch_dashboard" "runner-dashboard" {
                 "stacked": false,
                 "title": "FAILED: /aws/ec2/epam-py-runner/",
                 "view": "table"
+            }
+        },
+        {
+            "height": 5,
+            "width": 2,
+            "y": 0,
+            "x": 8,
+            "type": "log",
+            "properties": {
+                "query": "SOURCE '/aws/ec2/epam-py-runner/' | fields @timestamp, @message\n| sort @timestamp desc\n| filter @message like \"Running job\"\n| stats count() by bin(60m)",
+                "region": "eu-central-1",
+                "title": "Running jobs",
+                "view": "bar"
+            }
+        },
+        {
+            "height": 5,
+            "width": 2,
+            "y": 0,
+            "x": 10,
+            "type": "log",
+            "properties": {
+                "query": "SOURCE '/aws/ec2/epam-py-runner/' | fields @timestamp, @message\n| sort @timestamp desc\n| filter @message like \"Process completed with exit code 254\"\n| stats count() by bin(60m)",
+                "region": "eu-central-1",
+                "stacked": false,
+                "title": "Failed jobs",
+                "view": "bar"
             }
         }
     ]

@@ -1,7 +1,6 @@
 resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
   dashboard_name = "eks-cluster-dash"
   dashboard_body = <<EOF
-
 {
     "widgets": [
         {
@@ -112,7 +111,7 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
             }
         },
         {
-            "height": 6,
+            "height": 4,
             "width": 12,
             "y": 11,
             "x": 12,
@@ -172,9 +171,9 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
         },
         {
             "height": 5,
-            "width": 8,
+            "width": 9,
             "y": 6,
-            "x": 9,
+            "x": 6,
             "type": "metric",
             "properties": {
                 "region": "eu-central-1",
@@ -199,9 +198,9 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
         },
         {
             "height": 5,
-            "width": 7,
+            "width": 9,
             "y": 6,
-            "x": 17,
+            "x": 15,
             "type": "metric",
             "properties": {
                 "region": "eu-central-1",
@@ -227,7 +226,7 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
         {
             "height": 3,
             "width": 6,
-            "y": 11,
+            "y": 6,
             "x": 0,
             "type": "metric",
             "properties": {
@@ -249,8 +248,8 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
         {
             "height": 6,
             "width": 6,
-            "y": 11,
-            "x": 6,
+            "y": 9,
+            "x": 0,
             "type": "metric",
             "properties": {
                 "metrics": [
@@ -269,6 +268,6 @@ resource "aws_cloudwatch_dashboard" "eks-cluster-application" {
             }
         }
     ]
-    }
+}
   EOF  
 }
