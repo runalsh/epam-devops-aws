@@ -11,7 +11,7 @@ clusternode_type   = "t3a.medium"  ## 18 pods
 # clusternode_type   = "t3a.small" ## 12 pods
 minnumberofnodes    = 1
 maxnumberofnodes    = 2
-desirednumberofnodes = 1
+desirednumberofnodes = 2
 
 
 #instance for testing
