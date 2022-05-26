@@ -1,6 +1,6 @@
 # Cloud CI\CD using AWS!
 
-[Build Statuse](https://github.com/runalsh/epam_again_aws/actions/workflows/aws.yaml/badge.svg)
+[Build Statuse](https://github.com/runalsh/epam_again_aws/actions/workflows/auto-provision-infra.yaml/badge.svg)
 
 Simple Python app to get data from https://www.metaweather.com/api with storing to AWS RDS.
  - Cloud - Amazon Web Service (and Google Cloud in another repo but its not completed)
