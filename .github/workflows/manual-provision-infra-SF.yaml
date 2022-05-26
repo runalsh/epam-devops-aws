@@ -495,9 +495,9 @@ jobs:
     - name: Get admin permissions
       run: |
         kubectl apply -f admin.yaml
-    - name: Setting up dashboard
-      run: |
-        kubectl apply -f dashboard.yaml
+    # - name: Setting up dashboard
+    #   run: |
+    #     kubectl apply -f dashboard.yaml
     # # kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
     # # kubectl proxy
     # # dashboard on     http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
